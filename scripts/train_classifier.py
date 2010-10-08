@@ -1,10 +1,12 @@
-import argparse, collections, itertools, math, re
+import argparse, collections, itertools, math, os, os.path, re
+import cPickle as pickle
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
 from nltk.classify.util import accuracy
 from nltk.corpus import stopwords
 from nltk.corpus.reader import CategorizedPlaintextCorpusReader, CategorizedTaggedCorpusReader
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.metrics import BigramAssocMeasures, f_measure, masi_distance, precision, recall
+from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk.util import bigrams
 
 ########################################
@@ -16,7 +18,7 @@ parser = argparse.ArgumentParser(description='Train a NLTK Classifier')
 parser.add_argument('corpus',
 	help='corpus name/path relative to nltk_data directory')
 parser.add_argument('--filename', help='''filename/path for where to store the
-	pickled classifier. the default is {corpus}_{algorithm}.pickle''')
+	pickled classifier. the default is {corpus}_{algorithm}.pickle in ~/nltk_data/classifiers''')
 parser.add_argument('--algorithm', default='NaiveBayes',
 	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
 	help='training algorithm to use. maxent used the default maxent training algorithm, either CG or iis')
@@ -69,7 +71,7 @@ score_group.add_argument('--score_fn', default='chi_sq',
 	help='scoring function for information gain and bigram collocations')
 score_group.add_argument('--min_score', default=0, type=int,
 	help='minimum score for a word to be included. if 0, all words are used.')
-score_group.add_argument('--max-feats', default=0, type=int,
+score_group.add_argument('--max_feats', default=0, type=int,
 	help='maximum number of words to include, ordered by highest score. if 0, all words are used.')
 
 eval_group = parser.add_argument_group('Classifier Evaluation',
@@ -199,18 +201,55 @@ for label in labels:
 ## word scoring ##
 ##################
 
+score_fn = getattr(BigramAssocMeasures, args.score_fn)
+
 def bag_of_words(words):
 	return dict([(word, True) for word in words])
 
 def bag_of_words_in_set(words, wordset):
 	return bag_of_words(set(words) & wordset)
 
-if args.min_score or args.max_feats:
-	# TODO: score words by label and create top words set to use with
-	# bag_of_words_in_set
-	pass
+def word_scores():
+	word_fd = FreqDist()
+	label_word_fd = ConditionalFreqDist()
+	
+	for label in labels:
+		for sent in categorized_corpus.sents(categories=[label]):
+			for word in norm_sent(sent):
+				word_fd.inc(word)
+				label_word_fd[label].inc(word)
+	
+	scores = collections.defaultdict(int)
+	n_xx = label_word_fd.N()
+	
+	for label in label_word_fd.conditions():
+		n_xi = label_word_fd[label].N()
+		
+		for word, n_ii in label_word_fd[label].iteritems():
+			n_ix = word_fd[word]
+			scores[word] += score_fn(n_ii, (n_ix, n_xi), n_xx)
+	
+	return scores
 
-featx = bag_of_words
+if args.min_score or args.max_feats:
+	if args.trace:
+		print 'calculating word scores'
+	
+	ws = sorted(word_scores().items(), key=lambda (w, s): s, reverse=True)
+	
+	if args.min_score:
+		ws = [(w, s) for (w, s) in ws if s >= args.min_score]
+	
+	if args.max_feats:
+		ws = ws[:args.max_feats]
+	
+	bestwords = set([w for (w, s) in ws])
+	featx = lambda words: bag_of_words_in_set(words, bestwords)
+	
+	if args.trace:
+		print '%d words meet min_score and/or max_feats' % len(bestwords)
+else:
+	featx = bag_of_words
 
 ##############################
 ## training & testing feats ##
@@ -239,9 +278,11 @@ for label, instances in label_instances.iteritems():
 if args.trace:
 	print '%d training feats, %d testing feats' % (len(train_feats), len(test_feats))
 
-##################################
-## classifier training function ##
-##################################
+#########################
+## classifier training ##
+#########################
+
+# TODO: will have to train multiple classifiers for --multi --binary
 
 train_kwargs = {}
 
@@ -301,4 +342,27 @@ if not args.no_eval:
 			if not args.no_fmeasure:
 				print '%s f-measure: %f' % (label, f_measure(ref, test))
 
-# TODO: pickle.dump classifier
+##############
+## pickling ##
+##############
+
+if args.filename:
+	fname = os.path.expanduser(args.filename)
+else:
+	name = '%s_%s.pickle' % (args.corpus, args.algorithm)
+	fname = os.path.join(os.path.expanduser('~/nltk_data/classifiers'), name)
+
+dirname = os.path.dirname(fname)
+
+if not os.path.exists(dirname):
+	if args.trace:
+		print 'creating directory %s' % dirname
+	
+	os.mkdir(dirname)
+
+if args.trace:
+	print 'dumping classifier to %s' % fname
+
+f = open(fname, 'w')
+pickle.dump(classifier, f)
+f.close()

@@ -1,9 +1,10 @@
-import argparse, itertools, re
-from nltk.classify import MaxentClassifier
+import argparse, collections, itertools, math, re
+from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
+from nltk.classify.util import accuracy
 from nltk.corpus import stopwords
 from nltk.corpus.reader import CategorizedPlaintextCorpusReader, CategorizedTaggedCorpusReader
 from nltk.corpus.util import LazyCorpusLoader
-from nltk.metrics import BigramAssocMeasures
+from nltk.metrics import BigramAssocMeasures, f_measure, masi_distance, precision, recall
 from nltk.util import bigrams
 
 ########################################
@@ -16,11 +17,11 @@ parser.add_argument('corpus',
 	help='corpus name/path relative to nltk_data directory')
 parser.add_argument('--filename', help='''filename/path for where to store the
 	pickled classifier. the default is {corpus}_{algorithm}.pickle''')
-parser.add_argument('--algorithm', default='naivebayes',
+parser.add_argument('--algorithm', default='NaiveBayes',
 	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
 	help='training algorithm to use. maxent used the default maxent training algorithm, either CG or iis')
-parser.add_argument('--trace', default=0, type=int,
-	help='how much trace output you want')
+parser.add_argument('--trace', default=1, type=int,
+	help='how much trace output you want. defaults to 1, 0 is no trace output.')
 
 corpus_group = parser.add_argument_group('Training Corpus')
 corpus_group.add_argument('--reader', choices=('plaintext', 'tagged'),
@@ -172,12 +173,12 @@ def label_sents(label):
 
 def label_paras(label):
 	for para in categorized_corpus.paras(categories=[label]):
-		yield itertools.chain([norm_sent(sent) for sent in para])
+		yield list(itertools.chain(*[norm_sent(sent) for sent in para]))
 
 def label_files(label):
 	for fileid in categorized_corpus.fileids(categories=[label]):
 		sents = categorized_corpus.sents(fileids=[fileid])
-		yield itertools.chain([norm_sent(sent) for sent in sents])
+		yield list(itertools.chain(*[norm_sent(sent) for sent in sents]))
 
 label_instance_function = {
 	'sents': label_sents,
@@ -186,7 +187,118 @@ label_instance_function = {
 }
 
 lif = label_instance_function[args.instances]
-label_words = {}
+label_instances = {}
 
 for label in labels:
-	label_words[label] = lif(label)
+	label_instances[label] = list(lif(label))
+	
+	if args.trace:
+		print '%s has %d instances' % (label, len(label_instances[label]))
+
+##################
+## word scoring ##
+##################
+
+def bag_of_words(words):
+	return dict([(word, True) for word in words])
+
+def bag_of_words_in_set(words, wordset):
+	return bag_of_words(set(words) & wordset)
+
+if args.min_score or args.max_feats:
+	# TODO: score words by label and create top words set to use with
+	# bag_of_words_in_set
+	pass
+
+featx = bag_of_words
+
+##############################
+## training & testing feats ##
+##############################
+
+# TODO: this will have to be modified for --multi --binary classifier
+
+train_feats = []
+test_feats = []
+
+for label, instances in label_instances.iteritems():
+	l = len(instances)
+	labeled_instances = [(featx(i), label) for i in instances]
+	
+	if args.fraction != 1.0:
+		cutoff = int(math.ceil(l * args.fraction))
+		train_feats.extend(labeled_instances[:cutoff])
+		test_feats.extend(labeled_instances[cutoff:])
+		
+		if args.trace > 1:
+			print '%s: %d training instances, %d testing instances' % (label, cutoff, (l-cutoff))
+	else:
+		train_feats.extend(labeled_instances)
+		test_feats.extend(labeled_instances)
+
+if args.trace:
+	print '%d training feats, %d testing feats' % (len(train_feats), len(test_feats))
+
+##################################
+## classifier training function ##
+##################################
+
+train_kwargs = {}
+
+if args.algorithm == 'DecisionTree':
+	train_kwargs['entropy_cutoff'] = args.entropy_cutoff
+	train_kwargs['depth_cutoff'] = args.depth_cutoff
+	train_kwargs['support_cutoff'] = args.support_cutoff
+	train_kwargs['verbose'] = args.trace
+elif args.algorithm != 'NaiveBayes':
+	if args.algorithm != 'Maxent':
+		train_kwargs['algorithm'] = args.algorithm
+	
+	train_kwargs['max_iter'] = args.max_iter
+	train_kwargs['min_ll'] = args.min_ll
+	train_kwargs['min_lldelta'] = args.min_lldelta
+	train_kwargs['trace'] = args.trace
+
+train_function = {
+	'NaiveBayes': NaiveBayesClassifier.train,
+	'DecisionTree': DecisionTreeClassifier.train
+}
+
+trainf = train_function.get(args.algorithm, MaxentClassifier.train)
+
+if args.trace:
+	print 'training a %s classifier' % args.algorithm
+
+classifier = trainf(train_feats, **train_kwargs)
+
+###########################
+## classifier evaluation ##
+###########################
+
+if not args.no_eval:
+	if not args.no_accuracy:
+		print 'accuracy: %f' % accuracy(classifier, test_feats)
+	
+	if not args.no_precision or not args.no_recall or not args.no_fmeasure:
+		refsets = collections.defaultdict(set)
+		testsets = collections.defaultdict(set)
+		
+		for i, (feat, label) in enumerate(test_feats):
+			refsets[label].add(i)
+			observed = classifier.classify(feat)
+			testsets[observed].add(i)
+		
+		for label in labels:
+			ref = refsets[label]
+			test = testsets[label]
+			
+			if not args.no_precision:
+				print '%s precision: %f' % (label, precision(ref, test))
+			
+			if not args.no_recall:
+				print '%s recall: %f' % (label, recall(ref, test))
+			
+			if not args.no_fmeasure:
+				print '%s f-measure: %f' % (label, f_measure(ref, test))
+
+# TODO: pickle.dump classifier

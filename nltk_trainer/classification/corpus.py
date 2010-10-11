@@ -1,38 +1,40 @@
 import itertools
 
-def categorized_words(categorized_corpus):
+def category_words(categorized_corpus):
 	for category in categorized_corpus.categories():
 		yield category, categorized_corpus.words(categories=[category])
 
 def category_fileidset(categorized_corpus, category):
 	return set(categorized_corpus.fileids(categories=[category]))
 
-def not_category_fileidset(categorized_corpus, category):
-	all_fileids = set(categorized_corpus.fileids())
-	good_fileids = category_fileidset(categorized_corpus, category)
-	return all_fileids - good_fileids
-
-def categorized_sent_words(categorized_corpus, category):
+def category_sent_words(categorized_corpus, category):
 	return categorized_corpus.sents(categories=[category])
 
-def not_category_sent_words(categorized_corpus, category):
-	for fileid in not_category_fileidset(categorized_corpus, category):
-		sents = categorized_corpus.sents(fileids=[fileid], categories=[category])
-		yield itertools.chain(*sents)
-
-def categorized_para_words(categorized_corpus, category):
+def category_para_words(categorized_corpus, category):
 	for para in categorized_corpus.paras(categories=[category]):
 		yield itertools.chain(*para)
 
-def not_category_para_words(categorized_corpus, category):
-	for fileid in not_category_fileidset(categorized_corpus, category):
-		for para in categorized_corpus.paras(fileids=[fileid], categories=[category]):
-			yield itertools.chain(*para)
-
-def categorized_file_words(categorized_corpus, category):
+def category_file_words(categorized_corpus, category):
 	for fileid in category_fileidset(categorized_corpus, category):
-		yield itertools.chain(*categorized_corpus.sents(fileids=[fileid]))
+		yield categorized_corpus.words(fileids=[fileid])
 
-def not_category_file_words(categorized_corpus, category):
-	for fileid in not_category_fileidset(categorized_corpus, category):
-		yield itertools.chain(*categorized_corpus.sents(fileids=[fileid]))
+## multi category corpus ##
+
+def corpus_fileid_categories(categorized_corpus, prefix):
+	for fileid in categorized_corpus.fileids():
+		if fileid.startswith(prefix):
+			yield fileid, set(categorized_corpus.categories(fileids=[fileid]))
+	
+def multi_category_sent_words(categorized_corpus, fileid_prefix=''):
+	for fileid, categories in corpus_fileid_categories(categorized_corpus, fileid_prefix):
+		for sent in categorized_corpus.sents(fileids=[fileid]):
+			yield sent, categories
+
+def multi_category_para_words(categorized_corpus, fileid_prefix=''):
+	for fileid, categories in corpus_fileid_categories(categorized_corpus, fileid_prefix):
+		for para in categorized_corpus.paras(fileids=[fileid]):
+			yield itertools.chain(*para), categories
+
+def multi_category_file_words(categorized_corpus, fileid_prefix=''):
+	for fileid, categories in corpus_fileid_categories(categorized_corpus, fileid_prefix):
+		yield categorized_corpus.words(fileids=[fileid]), categories

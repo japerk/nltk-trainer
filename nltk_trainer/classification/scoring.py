@@ -1,4 +1,5 @@
 import collections
+from nltk.metrics import masi_distance
 from nltk.probability import FreqDist, ConditionalFreqDist
 
 def sum_category_word_scores(categorized_words, score_fn):
@@ -35,3 +36,27 @@ def ref_test_sets(classifier, test_feats):
 		testsets[observed].add(i)
 	
 	return refsets, testsets
+
+def multi_ref_test_sets(multi_classifier, multi_label_feats):
+	refsets = collections.defaultdict(set)
+	testsets = collections.defaultdict(set)
+	
+	for i, (feat, labels) in enumerate(multi_label_feats):
+		for label in labels:
+			refsets[label].add(i)
+		
+		for label in multi_classifier.classify(feat):
+			testsets[label].add(i)
+	
+	return refsets, testsets
+
+def avg_masi_distance(multi_classifier, multi_label_feats):
+	mds = []
+	
+	for feat, labels in multi_label_feats:
+		mds.append(masi_distance(labels, multi_classifier.classify(feat)))
+	
+	if mds:
+		return float(sum(mds)) / len(mds)
+	else:
+		return 0.0

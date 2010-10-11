@@ -8,9 +8,9 @@ from nltk.corpus.util import LazyCorpusLoader
 from nltk.metrics import BigramAssocMeasures, f_measure, masi_distance, precision, recall
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk.util import bigrams
-from nltk_trainer.classification.corpus import categorized_words, categorized_sent_words, categorized_para_words, categorized_file_words
+from nltk_trainer.classification import corpus, scoring
 from nltk_trainer.classification.featx import bag_of_words, bag_of_words_in_set, train_test_feats
-from nltk_trainer.classification.scoring import sorted_word_scores, sum_category_word_scores, ref_test_sets
+from nltk_trainer.classification.multi import MultiBinaryClassifier
 
 ########################################
 ## command options & argument parsing ##
@@ -50,6 +50,10 @@ corpus_group.add_argument('--fraction', default=1.0, type=float,
 	help='''what fraction of the corpus to use for training. the rest will be used for evaulation.
 			the default is to use all of it, and to test the classifier against the training data.
 			any other number < 1 will test against the remaining portion.''')
+corpus_group.add_argument('--train-prefix', default='training',
+	help='training fileid prefix for multi classifiers')
+corpus_group.add_argument('--test-prefix', default='test',
+	help='testing fileid prefix for multi classifiers')
 
 classifier_group = parser.add_argument_group('Classifier Type',
 	'''A binary classifier has only 2 labels, and is the default classifier.
@@ -157,9 +161,9 @@ elif nlabels == 1:
 elif nlabels == 2 and args.multi:
 	raise ValueError('corpus must have more than 2 categories if --multi is specified')
 
-#####################
-## text extraction ##
-#####################
+########################
+## text normalization ##
+########################
 
 if args.filter_stopwords == 'no':
 	stopset = set()
@@ -169,7 +173,7 @@ else:
 if not args.punctuation:
 	stopset |= set([p for p in string.punctuation])
 
-def norm_sent(words):
+def norm_words(words):
 	if not args.no_lowercase:
 		words = [w.lower() for w in words]
 	
@@ -185,30 +189,6 @@ def norm_sent(words):
 	else:
 		return words
 
-label_instance_function = {
-	'sents': categorized_sent_words,
-	'paras': categorized_para_words,
-	'files': categorized_file_words
-}
-
-lif = label_instance_function[args.instances]
-label_instances = {}
-
-for label in labels:
-	instances = [norm_sent(i) for i in lif(categorized_corpus, label)]
-	label_instances[label] = [i for i in instances if i]
-	
-	if args.trace:
-		print '%s has %d instances' % (label, len(label_instances[label]))
-	
-	if args.multi and args.binary:
-		notlabel = '!%s' % label
-		# TODO: this isn't right, need to use not_* lifs & norm_sent
-		label_instances[notlabel] = list(lif(categorized_corpus, notlabel))
-		
-		if args.trace:
-			print '%s has %d instances' % (notlabel, len(label_instances[label]))
-
 ##################
 ## word scoring ##
 ##################
@@ -219,8 +199,8 @@ if args.min_score or args.max_feats:
 	if args.trace:
 		print 'calculating word scores'
 	
-	cat_words = [(category, norm_sent(words)) for category, words in categorized_words(categorized_corpus)]
-	ws = sorted_word_scores(sum_category_word_scores(cat_words, score_fn))
+	cat_words = [(category, norm_words(words)) for category, words in corpus.category_words(categorized_corpus)]
+	ws = scoring.sorted_word_scores(scoring.sum_category_word_scores(cat_words, score_fn))
 	
 	if args.min_score:
 		ws = [(w, s) for (w, s) in ws if s >= args.min_score]
@@ -236,35 +216,34 @@ if args.min_score or args.max_feats:
 else:
 	featx = bag_of_words
 
-##############################
-## training & testing feats ##
-##############################
-
-# TODO: this will have to be modified for --multi --binary classifier
+#####################
+## text extraction ##
+#####################
 
 if args.multi and args.binary:
-	train_feats = {}
-	test_feats = {}
+	label_instance_function = {
+		'sents': corpus.multi_category_sent_words,
+		'paras': corpus.multi_category_para_words,
+		'files': corpus.multi_category_file_words
+	}
+	
+	lif = label_instance_function[args.instances]
+	train_feats = [(featx(norm_words(words)), cats) for words, cats in lif(categorized_corpus, args.train_prefix)]
+	test_feats = [(featx(norm_words(words)), cats) for words, cats in lif(categorized_corpus, args.test_prefix)]
+else:
+	label_instance_function = {
+		'sents': corpus.category_sent_words,
+		'paras': corpus.category_para_words,
+		'files': corpus.category_file_words
+	}
+	
+	lif = label_instance_function[args.instances]
+	label_instances = {}
 	
 	for label in labels:
-		notlabel = '!%s' % label
-		true_instances = label_instances.get(label, [])
-		false_instances = label_instances.get('!%s' % label, [])
-		
-		true_labeled_instances = [(featx(i), label) for i in true_instances]
-		false_labeled_instances = [(featx(i), notlabel) for i in false_instances]
-		
-		if args.fraction != 1.0:
-			true_cutoff = int(math.ceil(len(true_instances) * args.fraction))
-			false_cutoff = int(math.ceil(len(false_instances) * args.fraction))
-			train_feats[label] = true_labeled_instances[:true_cutoff] + false_labeled_instances[:false_cutoff]
-			test_feats[label] = true_labeled_instances[true_cutoff:] + false_labeled_instances[false_cutoff:]
-		else:
-			train_feats[label] = test_feats[label] = true_labeled_instances + false_labeled_instances
-		
-		if args.trace:
-			print '%d training feats, %d testing feats' % (len(train_feats[label]), len(test_feats[label]))
-else:
+		instances = [norm_words(i) for i in lif(categorized_corpus, label)]
+		label_instances[label] = [i for i in instances if i]
+	
 	train_feats = []
 	test_feats = []
 	
@@ -283,8 +262,6 @@ else:
 #########################
 ## classifier training ##
 #########################
-
-# TODO: will have to train multiple classifiers for --multi --binary
 
 train_kwargs = {}
 
@@ -311,13 +288,10 @@ train_function = {
 trainf = train_function.get(args.algorithm, MaxentClassifier.train)
 
 if args.multi and args.binary:
-	label_classifiers = {}
+	if args.trace:
+		print 'training a multi-binary %s classifier' % args.algorithm
 	
-	for label in labels:
-		if args.trace:
-			print 'training binary %s classifier for %s' % (args.algorithm, label)
-		
-		label_classifiers[label] = trainf(train_feats[label], **train_kwargs)
+	classifier = MultiBinaryClassifier.train(labels, train_feats, trainf, **train_kwargs)
 else:
 	if args.trace:
 		print 'training a %s classifier' % args.algorithm
@@ -330,13 +304,16 @@ else:
 
 if not args.no_eval:
 	if not args.no_accuracy:
-		if args.multi and args.binary:
-			pass
-		else:
-			print 'accuracy: %f' % accuracy(classifier, test_feats)
+		print 'accuracy: %f' % accuracy(classifier, test_feats)
+	
+	if args.multi and args.binary and not args.no_masi_distance:
+		print 'average masi distance: %f' % (scoring.avg_masi_distance(classifier, test_feats))
 	
 	if not args.no_precision or not args.no_recall or not args.no_fmeasure:
-		refsets, testsets = ref_test_sets(classifier, test_feats)
+		if args.multi and args.binary:
+			refsets, testsets = scoring.multi_ref_test_sets(classifier, test_feats)
+		else:
+			refsets, testsets = scoring.ref_test_sets(classifier, test_feats)
 		
 		for label in labels:
 			ref = refsets[label]
@@ -351,7 +328,7 @@ if not args.no_eval:
 			if not args.no_fmeasure:
 				print '%s f-measure: %f' % (label, f_measure(ref, test) or 0)
 
-if args.show_most_informative and args.algorithm != 'DecisionTree':
+if args.show_most_informative and args.algorithm != 'DecisionTree' and not (args.multi and args.binary):
 	print '%d most informative features' % args.show_most_informative
 	classifier.show_most_informative_features(args.show_most_informative)
 

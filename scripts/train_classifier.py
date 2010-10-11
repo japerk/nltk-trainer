@@ -1,4 +1,4 @@
-import argparse, collections, itertools, math, os, os.path, re
+import argparse, collections, itertools, math, os, os.path, re, string
 import cPickle as pickle
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
 from nltk.classify.util import accuracy
@@ -8,6 +8,9 @@ from nltk.corpus.util import LazyCorpusLoader
 from nltk.metrics import BigramAssocMeasures, f_measure, masi_distance, precision, recall
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk.util import bigrams
+from nltk_trainer.classification.corpus import categorized_words, categorized_sent_words, categorized_para_words, categorized_file_words
+from nltk_trainer.classification.featx import bag_of_words, bag_of_words_in_set, train_test_feats
+from nltk_trainer.classification.scoring import sorted_word_scores, sum_category_word_scores, ref_test_sets
 
 ########################################
 ## command options & argument parsing ##
@@ -19,11 +22,15 @@ parser.add_argument('corpus',
 	help='corpus name/path relative to nltk_data directory')
 parser.add_argument('--filename', help='''filename/path for where to store the
 	pickled classifier. the default is {corpus}_{algorithm}.pickle in ~/nltk_data/classifiers''')
+parser.add_argument('--no-pickle', action='store_true', default=False,
+	help="don't pickle and save the classifier")
 parser.add_argument('--algorithm', default='NaiveBayes',
 	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
 	help='training algorithm to use. maxent used the default maxent training algorithm, either CG or iis')
 parser.add_argument('--trace', default=1, type=int,
 	help='how much trace output you want. defaults to 1, 0 is no trace output.')
+parser.add_argument('--show-most-informative', default=0, type=int,
+	help='number of most informative features to show, works for all algorithms except DecisionTree')
 
 corpus_group = parser.add_argument_group('Training Corpus')
 corpus_group.add_argument('--reader', choices=('plaintext', 'tagged'),
@@ -63,6 +70,8 @@ feat_group.add_argument('--no-lowercase', action='store_true', default=False,
 feat_group.add_argument('--filter-stopwords', default='english',
 	choices=['no']+stopwords.fileids(),
 	help='stopwords to filter, or "no" if want to keep stopwords')
+feat_group.add_argument('--punctuation', action='store_true', default=False,
+	help="don't strip punctuation")
 
 score_group = parser.add_argument_group('Feature Scoring',
 	'The default is no scoring, all words are included as features')
@@ -157,9 +166,16 @@ if args.filter_stopwords == 'no':
 else:
 	stopset = set(stopwords.words(args.filter_stopwords))
 
+if not args.punctuation:
+	stopset |= set([p for p in string.punctuation])
+
 def norm_sent(words):
 	if not args.no_lowercase:
 		words = [w.lower() for w in words]
+	
+	if not args.punctuation:
+		words = [w.strip(string.punctuation) for w in words]
+		words = [w for w in words if w]
 	
 	if stopset:
 		words = [w for w in words if w.lower() not in stopset]
@@ -169,33 +185,29 @@ def norm_sent(words):
 	else:
 		return words
 
-def label_sents(label):
-	for sent in categorized_corpus.sents(categories=[label]):
-		yield norm_sent(sent)
-
-def label_paras(label):
-	for para in categorized_corpus.paras(categories=[label]):
-		yield list(itertools.chain(*[norm_sent(sent) for sent in para]))
-
-def label_files(label):
-	for fileid in categorized_corpus.fileids(categories=[label]):
-		sents = categorized_corpus.sents(fileids=[fileid])
-		yield list(itertools.chain(*[norm_sent(sent) for sent in sents]))
-
 label_instance_function = {
-	'sents': label_sents,
-	'paras': label_paras,
-	'files': label_files
+	'sents': categorized_sent_words,
+	'paras': categorized_para_words,
+	'files': categorized_file_words
 }
 
 lif = label_instance_function[args.instances]
 label_instances = {}
 
 for label in labels:
-	label_instances[label] = list(lif(label))
+	instances = [norm_sent(i) for i in lif(categorized_corpus, label)]
+	label_instances[label] = [i for i in instances if i]
 	
 	if args.trace:
 		print '%s has %d instances' % (label, len(label_instances[label]))
+	
+	if args.multi and args.binary:
+		notlabel = '!%s' % label
+		# TODO: this isn't right, need to use not_* lifs & norm_sent
+		label_instances[notlabel] = list(lif(categorized_corpus, notlabel))
+		
+		if args.trace:
+			print '%s has %d instances' % (notlabel, len(label_instances[label]))
 
 ##################
 ## word scoring ##
@@ -203,39 +215,12 @@ for label in labels:
 
 score_fn = getattr(BigramAssocMeasures, args.score_fn)
 
-def bag_of_words(words):
-	return dict([(word, True) for word in words])
-
-def bag_of_words_in_set(words, wordset):
-	return bag_of_words(set(words) & wordset)
-
-def word_scores():
-	word_fd = FreqDist()
-	label_word_fd = ConditionalFreqDist()
-	
-	for label in labels:
-		for sent in categorized_corpus.sents(categories=[label]):
-			for word in norm_sent(sent):
-				word_fd.inc(word)
-				label_word_fd[label].inc(word)
-	
-	scores = collections.defaultdict(int)
-	n_xx = label_word_fd.N()
-	
-	for label in label_word_fd.conditions():
-		n_xi = label_word_fd[label].N()
-		
-		for word, n_ii in label_word_fd[label].iteritems():
-			n_ix = word_fd[word]
-			scores[word] += score_fn(n_ii, (n_ix, n_xi), n_xx)
-	
-	return scores
-
 if args.min_score or args.max_feats:
 	if args.trace:
 		print 'calculating word scores'
 	
-	ws = sorted(word_scores().items(), key=lambda (w, s): s, reverse=True)
+	cat_words = [(category, norm_sent(words)) for category, words in categorized_words(categorized_corpus)]
+	ws = sorted_word_scores(sum_category_word_scores(cat_words, score_fn))
 	
 	if args.min_score:
 		ws = [(w, s) for (w, s) in ws if s >= args.min_score]
@@ -257,26 +242,43 @@ else:
 
 # TODO: this will have to be modified for --multi --binary classifier
 
-train_feats = []
-test_feats = []
-
-for label, instances in label_instances.iteritems():
-	l = len(instances)
-	labeled_instances = [(featx(i), label) for i in instances]
+if args.multi and args.binary:
+	train_feats = {}
+	test_feats = {}
 	
-	if args.fraction != 1.0:
-		cutoff = int(math.ceil(l * args.fraction))
-		train_feats.extend(labeled_instances[:cutoff])
-		test_feats.extend(labeled_instances[cutoff:])
+	for label in labels:
+		notlabel = '!%s' % label
+		true_instances = label_instances.get(label, [])
+		false_instances = label_instances.get('!%s' % label, [])
+		
+		true_labeled_instances = [(featx(i), label) for i in true_instances]
+		false_labeled_instances = [(featx(i), notlabel) for i in false_instances]
+		
+		if args.fraction != 1.0:
+			true_cutoff = int(math.ceil(len(true_instances) * args.fraction))
+			false_cutoff = int(math.ceil(len(false_instances) * args.fraction))
+			train_feats[label] = true_labeled_instances[:true_cutoff] + false_labeled_instances[:false_cutoff]
+			test_feats[label] = true_labeled_instances[true_cutoff:] + false_labeled_instances[false_cutoff:]
+		else:
+			train_feats[label] = test_feats[label] = true_labeled_instances + false_labeled_instances
+		
+		if args.trace:
+			print '%d training feats, %d testing feats' % (len(train_feats[label]), len(test_feats[label]))
+else:
+	train_feats = []
+	test_feats = []
+	
+	for label, instances in label_instances.iteritems():
+		ltrain_feats, ltest_feats = train_test_feats(label, instances, featx=featx, fraction=args.fraction)
 		
 		if args.trace > 1:
-			print '%s: %d training instances, %d testing instances' % (label, cutoff, (l-cutoff))
-	else:
-		train_feats.extend(labeled_instances)
-		test_feats.extend(labeled_instances)
-
-if args.trace:
-	print '%d training feats, %d testing feats' % (len(train_feats), len(test_feats))
+			print '%s: %d training instances, %d testing instances' % (label, len(ltrain_feats), len(ltest_feats))
+		
+		train_feats.extend(ltrain_feats)
+		test_feats.extend(ltest_feats)
+	
+	if args.trace:
+		print '%d training feats, %d testing feats' % (len(train_feats), len(test_feats))
 
 #########################
 ## classifier training ##
@@ -287,6 +289,7 @@ if args.trace:
 train_kwargs = {}
 
 if args.algorithm == 'DecisionTree':
+	train_kwargs['binary'] = not args.multi
 	train_kwargs['entropy_cutoff'] = args.entropy_cutoff
 	train_kwargs['depth_cutoff'] = args.depth_cutoff
 	train_kwargs['support_cutoff'] = args.support_cutoff
@@ -307,10 +310,19 @@ train_function = {
 
 trainf = train_function.get(args.algorithm, MaxentClassifier.train)
 
-if args.trace:
-	print 'training a %s classifier' % args.algorithm
-
-classifier = trainf(train_feats, **train_kwargs)
+if args.multi and args.binary:
+	label_classifiers = {}
+	
+	for label in labels:
+		if args.trace:
+			print 'training binary %s classifier for %s' % (args.algorithm, label)
+		
+		label_classifiers[label] = trainf(train_feats[label], **train_kwargs)
+else:
+	if args.trace:
+		print 'training a %s classifier' % args.algorithm
+	
+	classifier = trainf(train_feats, **train_kwargs)
 
 ###########################
 ## classifier evaluation ##
@@ -318,51 +330,53 @@ classifier = trainf(train_feats, **train_kwargs)
 
 if not args.no_eval:
 	if not args.no_accuracy:
-		print 'accuracy: %f' % accuracy(classifier, test_feats)
+		if args.multi and args.binary:
+			pass
+		else:
+			print 'accuracy: %f' % accuracy(classifier, test_feats)
 	
 	if not args.no_precision or not args.no_recall or not args.no_fmeasure:
-		refsets = collections.defaultdict(set)
-		testsets = collections.defaultdict(set)
-		
-		for i, (feat, label) in enumerate(test_feats):
-			refsets[label].add(i)
-			observed = classifier.classify(feat)
-			testsets[observed].add(i)
+		refsets, testsets = ref_test_sets(classifier, test_feats)
 		
 		for label in labels:
 			ref = refsets[label]
 			test = testsets[label]
 			
 			if not args.no_precision:
-				print '%s precision: %f' % (label, precision(ref, test))
+				print '%s precision: %f' % (label, precision(ref, test) or 0)
 			
 			if not args.no_recall:
-				print '%s recall: %f' % (label, recall(ref, test))
+				print '%s recall: %f' % (label, recall(ref, test) or 0)
 			
 			if not args.no_fmeasure:
-				print '%s f-measure: %f' % (label, f_measure(ref, test))
+				print '%s f-measure: %f' % (label, f_measure(ref, test) or 0)
+
+if args.show_most_informative and args.algorithm != 'DecisionTree':
+	print '%d most informative features' % args.show_most_informative
+	classifier.show_most_informative_features(args.show_most_informative)
 
 ##############
 ## pickling ##
 ##############
 
-if args.filename:
-	fname = os.path.expanduser(args.filename)
-else:
-	name = '%s_%s.pickle' % (args.corpus, args.algorithm)
-	fname = os.path.join(os.path.expanduser('~/nltk_data/classifiers'), name)
-
-dirname = os.path.dirname(fname)
-
-if not os.path.exists(dirname):
-	if args.trace:
-		print 'creating directory %s' % dirname
+if not args.no_pickle:
+	if args.filename:
+		fname = os.path.expanduser(args.filename)
+	else:
+		name = '%s_%s.pickle' % (args.corpus, args.algorithm)
+		fname = os.path.join(os.path.expanduser('~/nltk_data/classifiers'), name)
 	
-	os.mkdir(dirname)
-
-if args.trace:
-	print 'dumping classifier to %s' % fname
-
-f = open(fname, 'w')
-pickle.dump(classifier, f)
-f.close()
+	dirname = os.path.dirname(fname)
+	
+	if not os.path.exists(dirname):
+		if args.trace:
+			print 'creating directory %s' % dirname
+		
+		os.mkdir(dirname)
+	
+	if args.trace:
+		print 'dumping classifier to %s' % fname
+	
+	f = open(fname, 'w')
+	pickle.dump(classifier, f)
+	f.close()

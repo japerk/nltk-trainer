@@ -50,9 +50,10 @@ corpus_group.add_argument('--instances', default='files',
 	help='''the group of words that represents a single training instance,
 	the default is to use entire files''')
 corpus_group.add_argument('--fraction', default=1.0, type=float,
-	help='''The fraction of the corpus to use for training, the rest will be used
-	for evaulation. The default is to use the entire corpus, and to test the
-	classifier against the same training data. Any number < 1 will test against
+	help='''The fraction of the corpus to use for training a binary or
+	multi-class classifier, the rest will be used for evaulation.
+	The default is to use the entire corpus, and to test the classifier
+	against the same training data. Any number < 1 will test against
 	the remaining fraction.''')
 corpus_group.add_argument('--train-prefix', default='training',
 	help='training fileid prefix for multi classifiers, default is "training"')
@@ -206,7 +207,7 @@ if args.min_score or args.max_feats:
 	if args.trace:
 		print 'calculating word scores'
 	
-	cat_words = [(category, norm_words(words)) for category, words in corpus.category_words(categorized_corpus)]
+	cat_words = [(cat, norm_words(words)) for cat, words in corpus.category_words(categorized_corpus)]
 	ws = scoring.sorted_word_scores(scoring.sum_category_word_scores(cat_words, score_fn))
 	
 	if args.min_score:
@@ -235,8 +236,10 @@ if args.multi and args.binary:
 	}
 	
 	lif = label_instance_function[args.instances]
-	train_feats = [(featx(norm_words(words)), cats) for words, cats in lif(categorized_corpus, args.train_prefix)]
-	test_feats = [(featx(norm_words(words)), cats) for words, cats in lif(categorized_corpus, args.test_prefix)]
+	train_instances = lif(categorized_corpus, args.train_prefix)
+	test_instances = lif(categorized_corpus, args.test_prefix)
+	train_feats = [(featx(norm_words(words)), cats) for words, cats in train_instances]
+	test_feats = [(featx(norm_words(words)), cats) for words, cats in test_instances]
 else:
 	label_instance_function = {
 		'sents': corpus.category_sent_words,
@@ -258,7 +261,8 @@ else:
 		ltrain_feats, ltest_feats = train_test_feats(label, instances, featx=featx, fraction=args.fraction)
 		
 		if args.trace > 1:
-			print '%s: %d training instances, %d testing instances' % (label, len(ltrain_feats), len(ltest_feats))
+			info = (label, len(ltrain_feats), len(ltest_feats))
+			print '%s: %d training instances, %d testing instances' % info
 		
 		train_feats.extend(ltrain_feats)
 		test_feats.extend(ltest_feats)
@@ -266,13 +270,14 @@ else:
 	if args.trace:
 		print '%d training feats, %d testing feats' % (len(train_feats), len(test_feats))
 
-#########################
-## classifier training ##
-#########################
+##############
+## training ##
+##############
 
 train_kwargs = {}
 
 if args.algorithm == 'DecisionTree':
+	trainf = DecisionTreeClassifier.train
 	train_kwargs['binary'] = not args.multi
 	train_kwargs['entropy_cutoff'] = args.entropy_cutoff
 	train_kwargs['depth_cutoff'] = args.depth_cutoff
@@ -282,17 +287,13 @@ elif args.algorithm != 'NaiveBayes':
 	if args.algorithm != 'Maxent':
 		train_kwargs['algorithm'] = args.algorithm
 	
+	trainf = MaxentClassifier.train
 	train_kwargs['max_iter'] = args.max_iter
 	train_kwargs['min_ll'] = args.min_ll
 	train_kwargs['min_lldelta'] = args.min_lldelta
 	train_kwargs['trace'] = args.trace
-
-train_function = {
-	'NaiveBayes': NaiveBayesClassifier.train,
-	'DecisionTree': DecisionTreeClassifier.train
-}
-
-trainf = train_function.get(args.algorithm, MaxentClassifier.train)
+else:
+	trainf = NaiveBayesClassifier.train
 
 if args.multi and args.binary:
 	if args.trace:
@@ -305,9 +306,9 @@ else:
 	
 	classifier = trainf(train_feats, **train_kwargs)
 
-###########################
-## classifier evaluation ##
-###########################
+################
+## evaluation ##
+################
 
 if not args.no_eval:
 	if not args.no_accuracy:

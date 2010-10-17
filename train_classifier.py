@@ -71,7 +71,7 @@ feat_group.add_argument('--bigrams', action='store_true', default=False,
 	help='include bigrams as features')
 feat_group.add_argument('--no-lowercase', action='store_true', default=False,
 	help="don't lowercase every word")
-feat_group.add_argument('--filter-stopwords', default='english',
+feat_group.add_argument('--filter-stopwords', default='no',
 	choices=['no']+stopwords.fileids(),
 	help='stopwords to filter, or "no" if want to keep stopwords')
 feat_group.add_argument('--punctuation', action='store_true', default=False,

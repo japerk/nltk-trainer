@@ -18,17 +18,18 @@ from nltk_trainer.classification.multi import MultiBinaryClassifier
 
 parser = argparse.ArgumentParser(description='Train a NLTK Classifier')
 
-parser.add_argument('corpus',
-	help='corpus name/path relative to nltk_data directory')
+parser.add_argument('corpus', help='corpus name/path relative to an nltk_data directory')
 parser.add_argument('--filename', help='''filename/path for where to store the
-	pickled classifier. the default is {corpus}_{algorithm}.pickle in ~/nltk_data/classifiers''')
+	pickled classifier, the default is {corpus}_{algorithm}.pickle in
+	~/nltk_data/classifiers''')
 parser.add_argument('--no-pickle', action='store_true', default=False,
 	help="don't pickle and save the classifier")
 parser.add_argument('--algorithm', default='NaiveBayes',
 	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
-	help='training algorithm to use. maxent used the default maxent training algorithm, either CG or iis')
+	help='''Training algorithm to use, defaults to NaiveBayes. Maxent uses the
+	default Maxent training algorithm, either CG or iis.''')
 parser.add_argument('--trace', default=1, type=int,
-	help='how much trace output you want. defaults to 1, 0 is no trace output.')
+	help='How much trace output you want, defaults to 1. 0 is no trace output.')
 parser.add_argument('--show-most-informative', default=0, type=int,
 	help='number of most informative features to show, works for all algorithms except DecisionTree')
 
@@ -37,26 +38,29 @@ corpus_group.add_argument('--reader', choices=('plaintext', 'tagged'),
 	default='plaintext',
 	help='specify categorized plaintext or part-of-speech tagged corpus')
 corpus_group.add_argument('--cat_pattern', default='(.+)/.+',
-	help='''regular expression pattern to identify categories based on file paths.
-	if cat_file is also given, this pattern is used to identify corpus file ids.''')
+	help='''A regular expression pattern to identify categories based on file paths.
+	If cat_file is also given, this pattern is used to identify corpus file ids.
+	The default is '(.+)/+', which uses sub-directories as categories.''')
 corpus_group.add_argument('--cat_file',
 	help='relative path to a file containing category listings')
 corpus_group.add_argument('--delimiter', default=' ',
-	help='category delimiter for category file')
+	help='category delimiter for category file, defaults to space')
 corpus_group.add_argument('--instances', default='files',
 	choices=('sents', 'paras', 'files'),
-	help='which groups of words represent a single training instance')
+	help='''the group of words that represents a single training instance,
+	the default is to use entire files''')
 corpus_group.add_argument('--fraction', default=1.0, type=float,
-	help='''what fraction of the corpus to use for training. the rest will be used for evaulation.
-			the default is to use all of it, and to test the classifier against the training data.
-			any other number < 1 will test against the remaining portion.''')
+	help='''The fraction of the corpus to use for training, the rest will be used
+	for evaulation. The default is to use the entire corpus, and to test the
+	classifier against the same training data. Any number < 1 will test against
+	the remaining fraction.''')
 corpus_group.add_argument('--train-prefix', default='training',
-	help='training fileid prefix for multi classifiers')
+	help='training fileid prefix for multi classifiers, default is "training"')
 corpus_group.add_argument('--test-prefix', default='test',
-	help='testing fileid prefix for multi classifiers')
+	help='testing fileid prefix for multi classifiers, default is "test"')
 
 classifier_group = parser.add_argument_group('Classifier Type',
-	'''A binary classifier has only 2 labels, and is the default classifier.
+	'''A binary classifier has only 2 labels, and is the default classifier type.
 	A multi-class classifier chooses one of many possible labels.
 	A multi-binary classifier choose zero or more labels by combining multiple
 	binary classifiers, 1 for each label.''')
@@ -66,14 +70,14 @@ classifier_group.add_argument('--multi', action='store_true', default=False,
 	help='train a multi-class classifier, or a multi-binary classifier if --binary is also given')
 
 feat_group = parser.add_argument_group('Feature Extraction',
-	'The default is to lowercase every word and filter out stopwords')
+	'The default is to lowercase every word, strip punctuation, and use stopwords')
 feat_group.add_argument('--bigrams', action='store_true', default=False,
 	help='include bigrams as features')
 feat_group.add_argument('--no-lowercase', action='store_true', default=False,
 	help="don't lowercase every word")
 feat_group.add_argument('--filter-stopwords', default='no',
 	choices=['no']+stopwords.fileids(),
-	help='stopwords to filter, or "no" if want to keep stopwords')
+	help='language stopwords to filter, defaults to "no" to keep stopwords')
 feat_group.add_argument('--punctuation', action='store_true', default=False,
 	help="don't strip punctuation")
 
@@ -81,11 +85,11 @@ score_group = parser.add_argument_group('Feature Scoring',
 	'The default is no scoring, all words are included as features')
 score_group.add_argument('--score_fn', default='chi_sq',
 	choices=[f for f in dir(BigramAssocMeasures) if not f.startswith('_')],
-	help='scoring function for information gain and bigram collocations')
+	help='scoring function for information gain and bigram collocations, defaults to chi_sq')
 score_group.add_argument('--min_score', default=0, type=int,
-	help='minimum score for a word to be included. if 0, all words are used.')
+	help='minimum score for a word to be included, default is 0 to include all words')
 score_group.add_argument('--max_feats', default=0, type=int,
-	help='maximum number of words to include, ordered by highest score. if 0, all words are used.')
+	help='maximum number of words to include, ordered by highest score, defaults is 0 to include all words')
 
 eval_group = parser.add_argument_group('Classifier Evaluation',
 	'''The default is to test the classifier against the unused fraction of the
@@ -106,17 +110,20 @@ eval_group.add_argument('--no-masi-distance', action='store_true', default=False
 maxent_group = parser.add_argument_group('Maxent Classifier',
 	'These options only apply when a Maxent algorithm is chosen.')
 maxent_group.add_argument('--max_iter', default=10, type=int,
-	help='maximum number of training iterations')
+	help='maximum number of training iterations, defaults to 10')
 maxent_group.add_argument('--min_ll', default=0, type=float,
-	help='stop classification when average log-likelihood is less than this')
+	help='stop classification when average log-likelihood is less than this, default is 0')
 maxent_group.add_argument('--min_lldelta', default=0.1, type=float,
-	help='stop classification when the change in average log-likelihood is less than this')
+	help='stop classification when the change in average log-likelihood is less than this, default is 0.1')
 
 decisiontree_group = parser.add_argument_group('Decision Tree Classifier',
 	'These options only apply when the DecisionTree algorithm is chosen')
-decisiontree_group.add_argument('--entropy_cutoff', default=0.05, type=float)
-decisiontree_group.add_argument('--depth_cutoff', default=100, type=int)
-decisiontree_group.add_argument('--support_cutoff', default=10, type=int)
+decisiontree_group.add_argument('--entropy_cutoff', default=0.05, type=float,
+	help='default is 0.05')
+decisiontree_group.add_argument('--depth_cutoff', default=100, type=int,
+	help='default is 100')
+decisiontree_group.add_argument('--support_cutoff', default=10, type=int,
+	help='default is 10')
 
 args = parser.parse_args()
 

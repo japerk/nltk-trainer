@@ -2,10 +2,10 @@
 Training Classifiers
 --------------------
 
-To train a binary NaiveBayes classifier on the movie_reviews corpus, using paragraphs as the training instances::
+To train a binary NaiveBayes classifier on the movie_reviews corpus, using paragraphs as the training instances ::
 	python train_classifier.py --instances paras --algorithm NaiveBayes movie_reviews
 
-To also include bigrams as features::
+To also include bigrams as features:
 	python train_classifier.py --instances paras --algorithm NaiveBayes --bigrams movie_reviews
 
 To set a minimum score threshold::

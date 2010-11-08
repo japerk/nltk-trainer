@@ -179,7 +179,7 @@ else:
 	stopset = set(stopwords.words(args.filter_stopwords))
 
 if not args.punctuation:
-	stopset |= set([p for p in string.punctuation])
+	stopset |= set(string.punctuation)
 
 def norm_words(words):
 	if not args.no_lowercase:

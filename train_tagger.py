@@ -1,8 +1,10 @@
-import argparse
+import argparse, math, itertools
 import cPickle as pickle
+import nltk.corpus
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
-from nltk.corpus.reader import TaggedCorpusReader
+from nltk.corpus.reader import TaggedCorpusReader, SwitchboardCorpusReader
 from nltk.corpus.util import LazyCorpusLoader
+from nltk.tag import ClassifierBasedPOSTagger
 
 ########################################
 ## command options & argument parsing ##
@@ -28,7 +30,7 @@ tagger_group.add_argument('--classifier', default=None,
 corpus_group = parser.add_argument_group('Training Corpus')
 # TODO: more choices
 corpus_group.add_argument('--reader', choices=('tagged',),
-	default='tagged',
+	default=None,
 	help='specify part-of-speech tagged corpus')
 corpus_group.add_argument('--fraction', default=1.0, type=float,
 	help='Fraction of corpus to use for training')
@@ -38,8 +40,6 @@ eval_group = parser.add_argument_group('Tagger Evaluation',
 	'Evaluation metrics for part-of-speech taggers')
 eval_group.add_argument('--no-eval', action='store_true', default=False,
 	help="don't do any evaluation")
-eval_group.add_argument('--no-accuracy', action='store_true', default=False,
-	help="don't evaluate accuracy")
 # TODO: are there any metrics other than accuracy?
 
 maxent_group = parser.add_argument_group('Maxent Classifier Tagger',
@@ -66,21 +66,44 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-reader_class = {
-	'tagged': TaggedCorpusReader
-	# TODO: also allow CategorizedTaggedCorpusReader, ConllCorpusReader (with column types)
-	# SwitchboardCorpusReader, and whatever's needed for timit corpus
-}
+if not args.reader:
+	tagged_corpus = getattr(nltk.corpus, args.corpus)
+	
+	if not tagged_corpus:
+		raise ValueError('%s is an unknown corpus')
+	
+	if args.trace:
+		print 'loading nltk.corpus.%s' % args.corpus
+	# trigger loading so it has its True class
+	tagged_corpus.fileids()
+	
+	if isinstance(tagged_corpus, SwitchboardCorpusReader):
+		tagged_sents = list(itertools.chain(*[[list(s) for s in d if s] for d in tagged_corpus.tagged_discourses()]))
+	# TODO: support timit corpus
+	else:
+		tagged_sents = tagged_corpus.tagged_sents()
+else:
+	# TODO: support generic usage of TaggedCorpusReader, ConllChunkCorpusReader,
+	# BracketParseCorpusReader
+	reader_class = {
+		'tagged': TaggedCorpusReader
+		# TODO: also allow CategorizedTaggedCorpusReader, ConllCorpusReader (with column types)
+		# SwitchboardCorpusReader, and whatever's needed for timit corpus
+	}
+	
+	# TODO: options for sep, word_tokenizer, sent_tokenizer, para_block_reader,
+	# tag_mapping_function
+	
+	tagged_corpus = LazyCorpusLoader(args.corpus, reader_class[args.reader])
 
-# TODO: options for sep, word_tokenizer, sent_tokenizer, para_block_reader,
-# tag_mapping_function
+nsents = len(tagged_sents)
+cutoff = int(math.ceil(nsents * args.fraction))
 
-tagged_corpus = LazyCorpusLoader(args.corpus, reader_class[args.reader])
+if args.trace:
+	print '%d tagged sents, training on %d' % (nsents, cutoff)
 
-# TODO: use fraction or whatever
-
-train_sents = tagged_corpus.tagged_sents()
-test_sents = train_sents
+train_sents = tagged_sents[:cutoff]
+test_sents = tagged_sents[cutoff:]
 
 #######################
 ## classifier tagger ##
@@ -108,14 +131,19 @@ elif args.classifier:
 	classifier_train_kwargs['trace'] = args.trace
 
 if args.classifier:
+	if args.trace:
+		print 'training a %s ClassifierBasedPOSTagger' % args.classifier
+	
 	# TODO: options for cutoff_prob
 	tagger = ClassifierBasedPOSTagger(train=train_sents,
 		classifier_builder=lambda train_feats: classifier_train(train_feats, **classifier_train_kwargs))
+
+# TODO: support other taggers: sequential backoff chaining, brill, TnT, default
 
 ################
 ## evaluation ##
 ################
 
 if not args.no_eval:
-	if not args.no_accuracy:
-		print 'accuracy: %f' % tagger.accuracy(test_feats)
+	print 'evaluating %s' % tagger
+	print 'accuracy: %f' % tagger.evaluate(test_sents)

@@ -135,7 +135,7 @@ if args.classifier:
 		print 'training a %s ClassifierBasedPOSTagger' % args.classifier
 	
 	# TODO: options for cutoff_prob
-	tagger = ClassifierBasedPOSTagger(train=train_sents,
+	tagger = ClassifierBasedPOSTagger(train=train_sents, verbose=args.trace,
 		classifier_builder=lambda train_feats: classifier_train(train_feats, **classifier_train_kwargs))
 
 # TODO: support other taggers: sequential backoff chaining, brill, TnT, default

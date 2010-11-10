@@ -5,6 +5,7 @@ from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesCl
 from nltk.corpus.reader import TaggedCorpusReader, SwitchboardCorpusReader
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag import ClassifierBasedPOSTagger
+from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
 
 ########################################
 ## command options & argument parsing ##
@@ -67,7 +68,10 @@ args = parser.parse_args()
 ###################
 
 if not args.reader:
-	tagged_corpus = getattr(nltk.corpus, args.corpus)
+	if args.corpus == 'timit':
+		tagged_corpus = LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader, '.+\.tags')
+	else:
+		tagged_corpus = getattr(nltk.corpus, args.corpus)
 	
 	if not tagged_corpus:
 		raise ValueError('%s is an unknown corpus')
@@ -97,13 +101,16 @@ else:
 	tagged_corpus = LazyCorpusLoader(args.corpus, reader_class[args.reader])
 
 nsents = len(tagged_sents)
-cutoff = int(math.ceil(nsents * args.fraction))
+
+if args.fraction == 1.0:
+	train_sents = test_sents = tagged_sents
+else:
+	cutoff = int(math.ceil(nsents * args.fraction))
+	train_sents = tagged_sents[:cutoff]
+	test_sents = tagged_sents[cutoff:]
 
 if args.trace:
-	print '%d tagged sents, training on %d' % (nsents, cutoff)
-
-train_sents = tagged_sents[:cutoff]
-test_sents = tagged_sents[cutoff:]
+	print '%d tagged sents, training on %d' % (nsents, len(train_sents))
 
 #######################
 ## classifier tagger ##

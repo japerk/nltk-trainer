@@ -6,6 +6,7 @@ from nltk.corpus.reader import TaggedCorpusReader, SwitchboardCorpusReader
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag import ClassifierBasedPOSTagger
 from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
+from nltk_trainer.tagging.training import train_brill_tagger
 
 ########################################
 ## command options & argument parsing ##
@@ -27,6 +28,15 @@ tagger_group.add_argument('--classifier', default=None,
 	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
 	help='''ClassifierBasedPOSTagger algorithm to use, default is None.
 	Maxent uses the default Maxent training algorithm, either CG or iis.''')
+tagger_group.add_argument('--brill', action='store_true', default=False,
+	help='Train a Brill Tagger in front of the other tagger')
+
+brill_group = parser.add_argument_group('Brill Tagger Options')
+brill_group.add_argument('--template_bounds', type=int, default=1,
+	help='''Choose the max bounds for Brill Templates to train a Brill Tagger.
+	The default is 0 for no Brill Tagger.''')
+brill_group.add_argument('--max_rules', type=int, default=200)
+brill_group.add_argument('--min_score', type=int, default=2)
 
 corpus_group = parser.add_argument_group('Training Corpus')
 # TODO: more choices
@@ -146,6 +156,14 @@ if args.classifier:
 		classifier_builder=lambda train_feats: classifier_train(train_feats, **classifier_train_kwargs))
 
 # TODO: support other taggers: sequential backoff chaining, brill, TnT, default
+
+###################
+## other taggers ##
+###################
+
+if args.brill:
+	tagger = train_brill_tagger(tagger, train_sents, args.template_bounds,
+		trace=args.trace, max_rules=args.max_rules, min_score=args.min_score)
 
 ################
 ## evaluation ##

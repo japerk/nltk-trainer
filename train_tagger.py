@@ -24,10 +24,25 @@ parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to 1. 0 is no trace output.')
 
 tagger_group = parser.add_argument_group('Tagger Choices')
+tagger_group.add_argument('--default', default='-None-', help='Default tag if None found')
+tagger_group.add_argument('--sequential', default='aubt',
+	help='''Sequential Backoff Algorithm. This can be any combination of the
+	following letters:
+	a: AffixTagger
+	u: UnigramTagger
+	b: BigramTagger
+	t: TrigramTagger
+	Or set to the empty string to not train a sequential backoff tagger.
+	''')
+tagger_group.add_argument('--affix', action='append', type=int,
+	help='''Add affixes to look at with an AffixTagger. Negative numbers look
+	at suffixes, positive numbers look at prefixes.''')
 tagger_group.add_argument('--classifier', default=None,
 	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
 	help='''ClassifierBasedPOSTagger algorithm to use, default is None.
 	Maxent uses the default Maxent training algorithm, either CG or iis.''')
+tagger_group.add_argument('--cutoff_prob', default=0, type=float,
+	help='Cutoff probability for classifier tagger to backoff to previous tagger')
 tagger_group.add_argument('--brill', action='store_true', default=False,
 	help='Train a Brill Tagger in front of the other tagger')
 
@@ -122,6 +137,47 @@ else:
 if args.trace:
 	print '%d tagged sents, training on %d' % (nsents, len(train_sents))
 
+####################
+## default tagger ##
+####################
+
+tagger = nltk.tag.DefaultTagger(args.default)
+
+################################
+## sequential backoff taggers ##
+################################
+
+def affix_constructor(train_sents, backoff=None):
+	for affix in args.affix:
+		if args.trace:
+			print 'training AffixTagger with affix %d and backoff %s' % (affix, backoff)
+		
+		backoff = nltk.tag.AffixTagger(train_sents, affix_length=affix,
+			min_stem_length=min(affix, 2), backoff=backoff, verbose=args.trace)
+	
+	return backoff
+
+def ngram_constructor(cls):
+	def f(train_sents, backoff=None):
+		if args.trace:
+			print 'training %s tagger with backoff %s' % (cls, backoff)
+		# TODO: use args.cutoff
+		return cls(train_sents, backoff=backoff, verbose=args.trace)
+	
+	return f
+
+sequential_constructors = {
+	'a': affix_constructor,
+	'u': ngram_constructor(nltk.tag.UnigramTagger),
+	'b': ngram_constructor(nltk.tag.BigramTagger),
+	't': ngram_constructor(nltk.tag.TrigramTagger)
+}
+
+if args.sequential:
+	for c in args.sequential:
+		constructor = sequential_constructors[c]
+		tagger = constructor(train_sents, backoff=tagger)
+
 #######################
 ## classifier tagger ##
 #######################
@@ -151,9 +207,12 @@ if args.classifier:
 	if args.trace:
 		print 'training a %s ClassifierBasedPOSTagger' % args.classifier
 	
-	# TODO: options for cutoff_prob
+	def classifier_builder(train_feats):
+		return classifier_train(train_feats, **classifier_train_kwargs)
+	
 	tagger = ClassifierBasedPOSTagger(train=train_sents, verbose=args.trace,
-		classifier_builder=lambda train_feats: classifier_train(train_feats, **classifier_train_kwargs))
+		backoff=tagger, cutoff_prob=args.cutoff_prob,
+		classifier_builder=classifier_builder)
 
 # TODO: support other taggers: sequential backoff chaining, brill, TnT, default
 

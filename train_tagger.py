@@ -148,7 +148,9 @@ tagger = nltk.tag.DefaultTagger(args.default)
 ################################
 
 def affix_constructor(train_sents, backoff=None):
-	for affix in args.affix:
+	affixes = args.affix or [-3]
+	
+	for affix in affixes:
 		if args.trace:
 			print 'training AffixTagger with affix %d and backoff %s' % (affix, backoff)
 		
@@ -175,6 +177,9 @@ sequential_constructors = {
 
 if args.sequential:
 	for c in args.sequential:
+		if c not in sequential_constructors:
+			raise NotImplementedError('%s is not a valid sequential backoff tagger' % c)
+		
 		constructor = sequential_constructors[c]
 		tagger = constructor(train_sents, backoff=tagger)
 

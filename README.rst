@@ -13,6 +13,8 @@ You must have Python 2.6 with `argparse <http://docs.python.org/library/argparse
 Training Classifiers
 --------------------
 
+Example usage with the movie_reviews corpus can be found in `Training Binary Text Classifiers with NLTK Trainer <http://streamhacker.com/2010/10/25/training-binary-text-classifiers-nltk-trainer/>`_.
+
 For a complete list of usage options::
 	python train_classifier.py --help
 
@@ -42,3 +44,27 @@ Train on sentences::
 
 Evaluate the classifier by training on 3/4 of the paragraphs and testing against the remaing 1/4, without pickling::
 	python train_classifier.py --instances paras --algorithm NaiveBayes --fraction 0.75 --no-pickle movie_reviews
+
+
+Training Part of Speech Taggers
+-------------------------------
+
+The train_tagger.py script can use any corpus included with NLTK that provides a tagged_sents() method, and also supports the timit corpus.
+
+For a complete list of usage options::
+	python train_tagger.py --help
+
+Train the default sequential backoff tagger on the treebank corpus::
+	python train_tagger.py treebank
+
+To use a brill tagger with the default initial tagger::
+	python train_tagger.py treebank --brill
+
+To train a NaiveBayes classifier based tagger, without a sequential backoff tagger::
+	python train_tagger.py treebank --sequential '' --classifier NaiveBayes
+
+To train a unigram tagger::
+	python train_tagger.py treebank --sequential u
+
+To train on the switchboard corpus::
+	python train_tagger.py switchboard

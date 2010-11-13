@@ -12,46 +12,56 @@ from nltk_trainer.tagging.training import train_brill_tagger
 ## command options & argument parsing ##
 ########################################
 
-parser = argparse.ArgumentParser(description='Train a NLTK Classifier')
+parser = argparse.ArgumentParser(description='Train a NLTK Classifier',
+	formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument('corpus', help='corpus name/path relative to an nltk_data directory')
-parser.add_argument('--filename', help='''filename/path for where to store the
-	pickled classifier, the default is {corpus}_{algorithm}.pickle in
-	~/nltk_data/classifiers''')
+parser.add_argument('corpus',
+	help='''The name of a tagged corpus included with NLTK, such as treebank,
+brown, cess_esp, or floresta''')
+parser.add_argument('--filename',
+	help='''filename/path for where to store the pickled tagger.
+The default is {corpus}_{algorithm}.pickle in ~/nltk_data/taggers''')
 parser.add_argument('--no-pickle', action='store_true', default=False,
-	help="don't pickle and save the classifier")
+	help="Don't pickle and save the tagger")
 parser.add_argument('--trace', default=1, type=int,
-	help='How much trace output you want, defaults to 1. 0 is no trace output.')
+	help='How much trace output you want, defaults to %(default)d. 0 is no trace output.')
 parser.add_argument('--fraction', default=1.0, type=float,
-	help='Fraction of corpus to use for training')
+	help='Fraction of corpus to use for training, defaults to %(default)f')
 
 tagger_group = parser.add_argument_group('Tagger Choices')
-tagger_group.add_argument('--default', default='-None-', help='Default tag if None found')
-tagger_group.add_argument('--sequential', default='aubt',
-	help='''Sequential Backoff Algorithm. This can be any combination of the
-	following letters:
+tagger_group.add_argument('--default', default='-None-',
+	help='''The default tag "%(default)s". Set this to a different tag, such as "NN",
+to change the default tag.''')
+
+sequential_group = parser.add_argument_group('Sequential Tagger')
+sequential_group.add_argument('--sequential', default='aubt',
+	help='''Sequential Backoff Algorithm. This can be any combination of the following letters:
 	a: AffixTagger
 	u: UnigramTagger
 	b: BigramTagger
 	t: TrigramTagger
-	Or set to the empty string to not train a sequential backoff tagger.
-	''')
-tagger_group.add_argument('--affix', action='append', type=int,
-	help='''Add affixes to look at with an AffixTagger. Negative numbers look
-	at suffixes, positive numbers look at prefixes.''')
-tagger_group.add_argument('--classifier', default=None,
+The default is "%(default)s", but you can set this to the empty string
+to not train a sequential backoff tagger.''')
+sequential_group.add_argument('--affix', action='append', type=int,
+	help='''Add affixes to use for one or more AffixTaggers.
+Negative numbers are suffixes, positive numbers are prefixes.
+You can use this option multiple times to create multiple AffixTaggers with different affixes.
+The affixes will be used in the order given.''')
+
+classifier_group = parser.add_argument_group('Classifier Based Tagger')
+classifier_group.add_argument('--classifier', default=None,
 	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
-	help='''ClassifierBasedPOSTagger algorithm to use, default is None.
-	Maxent uses the default Maxent training algorithm, either CG or iis.''')
-tagger_group.add_argument('--cutoff_prob', default=0, type=float,
+	help='''ClassifierBasedPOSTagger algorithm to use, default is %(default)s.
+Maxent uses the default Maxent training algorithm, either CG or iis.''')
+classifier_group.add_argument('--cutoff_prob', default=0, type=float,
 	help='Cutoff probability for classifier tagger to backoff to previous tagger')
-tagger_group.add_argument('--brill', action='store_true', default=False,
-	help='Train a Brill Tagger in front of the other tagger')
 
 brill_group = parser.add_argument_group('Brill Tagger Options')
+brill_group.add_argument('--brill', action='store_true', default=False,
+	help='Train a Brill Tagger in front of the other tagger.')
 brill_group.add_argument('--template_bounds', type=int, default=1,
 	help='''Choose the max bounds for Brill Templates to train a Brill Tagger.
-	The default is 0 for no Brill Tagger.''')
+The default is %(default)d.''')
 brill_group.add_argument('--max_rules', type=int, default=200)
 brill_group.add_argument('--min_score', type=int, default=2)
 
@@ -64,11 +74,12 @@ eval_group.add_argument('--no-eval', action='store_true', default=False,
 maxent_group = parser.add_argument_group('Maxent Classifier Tagger',
 	'These options only apply when a Maxent classifier is chosen.')
 maxent_group.add_argument('--max_iter', default=10, type=int,
-	help='maximum number of training iterations, defaults to 10')
+	help='maximum number of training iterations, defaults to %(default)d')
 maxent_group.add_argument('--min_ll', default=0, type=float,
-	help='stop classification when average log-likelihood is less than this, default is 0')
+	help='stop classification when average log-likelihood is less than this, default is %(default)d')
 maxent_group.add_argument('--min_lldelta', default=0.1, type=float,
-	help='stop classification when the change in average log-likelihood is less than this, default is 0.1')
+	help='''stop classification when the change in average log-likelihood is less than this.
+default is %(default)f''')
 
 decisiontree_group = parser.add_argument_group('Decision Tree Classifier Tagger',
 	'These options only apply when the DecisionTree classifier is chosen')

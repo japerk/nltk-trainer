@@ -1,4 +1,4 @@
-import argparse, math, itertools
+import argparse, math, itertools, os.path
 import cPickle as pickle
 import nltk.corpus
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
@@ -22,6 +22,8 @@ parser.add_argument('--no-pickle', action='store_true', default=False,
 	help="don't pickle and save the classifier")
 parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to 1. 0 is no trace output.')
+parser.add_argument('--fraction', default=1.0, type=float,
+	help='Fraction of corpus to use for training')
 
 tagger_group = parser.add_argument_group('Tagger Choices')
 tagger_group.add_argument('--default', default='-None-', help='Default tag if None found')
@@ -53,15 +55,6 @@ brill_group.add_argument('--template_bounds', type=int, default=1,
 brill_group.add_argument('--max_rules', type=int, default=200)
 brill_group.add_argument('--min_score', type=int, default=2)
 
-corpus_group = parser.add_argument_group('Training Corpus')
-# TODO: more choices
-corpus_group.add_argument('--reader', choices=('tagged',),
-	default=None,
-	help='specify part-of-speech tagged corpus')
-corpus_group.add_argument('--fraction', default=1.0, type=float,
-	help='Fraction of corpus to use for training')
-# TODO: support corpora like conll2000 that have train.txt & test.txt
-
 eval_group = parser.add_argument_group('Tagger Evaluation',
 	'Evaluation metrics for part-of-speech taggers')
 eval_group.add_argument('--no-eval', action='store_true', default=False,
@@ -92,38 +85,31 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-if not args.reader:
-	if args.corpus == 'timit':
-		tagged_corpus = LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader, '.+\.tags')
-	else:
-		tagged_corpus = getattr(nltk.corpus, args.corpus)
-	
-	if not tagged_corpus:
-		raise ValueError('%s is an unknown corpus')
-	
-	if args.trace:
-		print 'loading nltk.corpus.%s' % args.corpus
-	# trigger loading so it has its True class
-	tagged_corpus.fileids()
-	
-	if isinstance(tagged_corpus, SwitchboardCorpusReader):
-		tagged_sents = list(itertools.chain(*[[list(s) for s in d if s] for d in tagged_corpus.tagged_discourses()]))
-	# TODO: support timit corpus
-	else:
-		tagged_sents = tagged_corpus.tagged_sents()
+if args.corpus == 'timit':
+	tagged_corpus = LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader, '.+\.tags')
 else:
-	# TODO: support generic usage of TaggedCorpusReader, ConllChunkCorpusReader,
-	# BracketParseCorpusReader
-	reader_class = {
-		'tagged': TaggedCorpusReader
-		# TODO: also allow CategorizedTaggedCorpusReader, ConllCorpusReader (with column types)
-		# SwitchboardCorpusReader, and whatever's needed for timit corpus
-	}
-	
-	# TODO: options for sep, word_tokenizer, sent_tokenizer, para_block_reader,
-	# tag_mapping_function
-	
-	tagged_corpus = LazyCorpusLoader(args.corpus, reader_class[args.reader])
+	tagged_corpus = getattr(nltk.corpus, args.corpus)
+
+if not tagged_corpus:
+	raise ValueError('%s is an unknown corpus')
+
+if args.trace:
+	print 'loading nltk.corpus.%s' % args.corpus
+# trigger loading so it has its True class
+tagged_corpus.fileids()
+
+if isinstance(tagged_corpus, SwitchboardCorpusReader):
+	tagged_sents = list(itertools.chain(*[[list(s) for s in d if s] for d in tagged_corpus.tagged_discourses()]))
+# TODO: support timit corpus
+else:
+	tagged_sents = tagged_corpus.tagged_sents()
+
+# TODO: support generic tagged corpus readers: TaggedCorpusReader,
+# BracketParseCorpusReader, ConllChunkCorpusReader
+
+##################
+## tagged sents ##
+##################
 
 nsents = len(tagged_sents)
 
@@ -147,6 +133,8 @@ tagger = nltk.tag.DefaultTagger(args.default)
 ## sequential backoff taggers ##
 ################################
 
+# NOTE: passing in verbose=args.trace doesn't produce useful printouts
+
 def affix_constructor(train_sents, backoff=None):
 	affixes = args.affix or [-3]
 	
@@ -155,7 +143,7 @@ def affix_constructor(train_sents, backoff=None):
 			print 'training AffixTagger with affix %d and backoff %s' % (affix, backoff)
 		
 		backoff = nltk.tag.AffixTagger(train_sents, affix_length=affix,
-			min_stem_length=min(affix, 2), backoff=backoff, verbose=args.trace)
+			min_stem_length=min(affix, 2), backoff=backoff)
 	
 	return backoff
 
@@ -163,8 +151,8 @@ def ngram_constructor(cls):
 	def f(train_sents, backoff=None):
 		if args.trace:
 			print 'training %s tagger with backoff %s' % (cls, backoff)
-		# TODO: use args.cutoff
-		return cls(train_sents, backoff=backoff, verbose=args.trace)
+		# TODO: args.cutoff option
+		return cls(train_sents, backoff=backoff)
 	
 	return f
 
@@ -219,8 +207,6 @@ if args.classifier:
 		backoff=tagger, cutoff_prob=args.cutoff_prob,
 		classifier_builder=classifier_builder)
 
-# TODO: support other taggers: sequential backoff chaining, brill, TnT, default
-
 ###################
 ## other taggers ##
 ###################
@@ -236,3 +222,40 @@ if args.brill:
 if not args.no_eval:
 	print 'evaluating %s' % tagger
 	print 'accuracy: %f' % tagger.evaluate(test_sents)
+
+##############
+## pickling ##
+##############
+
+if not args.no_pickle:
+	if args.filename:
+		fname = os.path.expanduser(args.filename)
+	else:
+		parts = [args.corpus]
+		
+		if args.brill:
+			parts.append('brill')
+		
+		if args.classifier:
+			parts.append(args.classifier)
+		
+		if args.sequential:
+			parts.append(args.sequential)
+		
+		name = '%s.pickle' % '_'.join(parts)
+		fname = os.path.join(os.path.expanduser('~/nltk_data/taggers'), name)
+	
+	dirname = os.path.dirname(fname)
+	
+	if not os.path.exists(dirname):
+		if args.trace:
+			print 'creating directory %s' % dirname
+		
+		os.mkdir(dirname)
+	
+	if args.trace:
+		print 'dumping tagger to %s' % fname
+	
+	f = open(fname, 'w')
+	pickle.dump(tagger, f)
+	f.close()

@@ -49,7 +49,7 @@ Evaluate the classifier by training on 3/4 of the paragraphs and testing against
 Training Part of Speech Taggers
 -------------------------------
 
-The train_tagger.py script can use any corpus included with NLTK that provides a tagged_sents() method, and also supports the timit corpus.
+The ``train_tagger.py`` script can use any corpus included with NLTK that implements a ``tagged_sents()`` method. It can also train on the ``timit`` corpus, which includes tagged sentences that are not available through the ``TimitCorpusReader``.
 
 For a complete list of usage options::
 	python train_tagger.py --help

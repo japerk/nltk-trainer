@@ -2,7 +2,7 @@ import argparse, math, itertools, os.path
 import cPickle as pickle
 import nltk.corpus
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
-from nltk.corpus.reader import TaggedCorpusReader, SwitchboardCorpusReader
+from nltk.corpus.reader import TaggedCorpusReader, SwitchboardCorpusReader, NPSChatCorpusReader
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag import ClassifierBasedPOSTagger
 from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
@@ -111,7 +111,10 @@ tagged_corpus.fileids()
 
 if isinstance(tagged_corpus, SwitchboardCorpusReader):
 	tagged_sents = list(itertools.chain(*[[list(s) for s in d if s] for d in tagged_corpus.tagged_discourses()]))
-# TODO: support timit corpus
+elif isinstance(tagged_corpus, NPSChatCorpusReader):
+	tagged_sents = tagged_corpus.tagged_posts()
+# NOTE: IndianCorpusReader has different files for different languages, so
+# need a way to restrict by fileid
 else:
 	tagged_sents = tagged_corpus.tagged_sents()
 

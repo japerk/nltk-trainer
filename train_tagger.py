@@ -2,7 +2,8 @@ import argparse, math, itertools, os.path
 import cPickle as pickle
 import nltk.corpus
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
-from nltk.corpus.reader import TaggedCorpusReader, SwitchboardCorpusReader, NPSChatCorpusReader
+# special case corpus readers
+from nltk.corpus.reader import SwitchboardCorpusReader, NPSChatCorpusReader, IndianCorpusReader
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag import ClassifierBasedPOSTagger
 from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
@@ -27,6 +28,8 @@ parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to %(default)d. 0 is no trace output.')
 parser.add_argument('--fraction', default=1.0, type=float,
 	help='Fraction of corpus to use for training, defaults to %(default)f')
+parser.add_argument('--fileid', default=None,
+	help='Specify and individual fileid to use for training')
 
 tagger_group = parser.add_argument_group('Tagger Choices')
 tagger_group.add_argument('--default', default='-None-',
@@ -106,17 +109,30 @@ if not tagged_corpus:
 
 if args.trace:
 	print 'loading nltk.corpus.%s' % args.corpus
-# trigger loading so it has its True class
+# trigger loading so it has its true class
 tagged_corpus.fileids()
+# fileid is used for corpus naming, if it exists
+fileid = args.fileid
+kwargs = {}
+# TODO: simplify_tags kwarg
+if args.fileid:
+	kwargs['fileids'] = [args.fileid]
 
 if isinstance(tagged_corpus, SwitchboardCorpusReader):
-	tagged_sents = list(itertools.chain(*[[list(s) for s in d if s] for d in tagged_corpus.tagged_discourses()]))
+	if args.fileid:
+		raise ValueError('fileid cannot be used with switchboard')
+	
+	tagged_sents = list(itertools.chain(*[[list(s) for s in d if s] for d in tagged_corpus.tagged_discourses(**kwargs)]))
 elif isinstance(tagged_corpus, NPSChatCorpusReader):
-	tagged_sents = tagged_corpus.tagged_posts()
-# NOTE: IndianCorpusReader has different files for different languages, so
-# need a way to restrict by fileid
+	tagged_sents = tagged_corpus.tagged_posts(**kwargs)
+elif isinstance(tagged_corpus, IndianCorpusReader):
+	if not kwargs.get('fileids'):
+		fileid = 'hindi.pos'
+		kwargs['fileids'] = [fileid]
+	
+	tagged_sents = tagged_corpus.tagged_sents(**kwargs)
 else:
-	tagged_sents = tagged_corpus.tagged_sents()
+	tagged_sents = tagged_corpus.tagged_sents(**kwargs)
 
 # TODO: support generic tagged corpus readers: TaggedCorpusReader,
 # BracketParseCorpusReader, ConllChunkCorpusReader
@@ -125,6 +141,8 @@ else:
 ## tagged sents ##
 ##################
 
+# can't trust corpus to provide valid sents (indian)
+tagged_sents = [sent for sent in tagged_sents if sent]
 nsents = len(tagged_sents)
 
 if args.fraction == 1.0:
@@ -246,6 +264,9 @@ if not args.no_pickle:
 		fname = os.path.expanduser(args.filename)
 	else:
 		parts = [args.corpus]
+		
+		if fileid:
+			parts.append(os.path.splitext(fileid)[0])
 		
 		if args.brill:
 			parts.append('brill')

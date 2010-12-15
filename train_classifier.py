@@ -362,6 +362,6 @@ if not args.no_pickle:
 	if args.trace:
 		print 'dumping classifier to %s' % fname
 	
-	f = open(fname, 'w')
+	f = open(fname, 'wb')
 	pickle.dump(classifier, f)
 	f.close()

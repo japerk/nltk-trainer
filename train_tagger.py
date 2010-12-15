@@ -291,6 +291,6 @@ if not args.no_pickle:
 	if args.trace:
 		print 'dumping tagger to %s' % fname
 	
-	f = open(fname, 'w')
+	f = open(fname, 'wb')
 	pickle.dump(tagger, f)
 	f.close()

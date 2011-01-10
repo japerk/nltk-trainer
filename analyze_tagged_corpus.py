@@ -18,9 +18,11 @@ brown, cess_esp, or floresta''')
 parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to %(default)d. 0 is no trace output.')
 parser.add_argument('--simplify_tags', action='store_true', default=False,
-	help='use simplified tags')
-parser.add_argument('--sort', default='count', choices=['tag', 'count'],
+	help='Use simplified tags')
+parser.add_argument('--sort', default='tag', choices=['tag', 'count'],
 	help='Sort key, defaults to %(default)s')
+parser.add_argument('--reverse', action='store_true', default=False,
+	help='Sort in revere order')
 
 args = parser.parse_args()
 
@@ -64,14 +66,20 @@ for word, tag in tagged_corpus.tagged_words(**kwargs):
 ## output ##
 ############
 
-print '%d words' % wc
-print '%d tags' % len(tag_counts)
+print '%d words\n%d tags\n' % (wc, len(tag_counts))
 
-# TODO: ReST table formatting option, sorting by tag or count option
 if args.sort == 'tag':
 	sort_key = lambda (t, c): t
-else:
+elif args.sort == 'count':
 	sort_key = lambda (t, c): c
+else:
+	raise ValueError('%s is not a valid sort option' % args.sort)
 
-for tag, count in sorted(tag_counts.items(), key=sort_key):
-	print '%s: %s' % (tag, count)
+# simple reSt table format
+print '  Tag  \t  Count  '
+print '=======\t========='
+
+for tag, count in sorted(tag_counts.items(), key=sort_key, reverse=args.reverse):
+	print '%s\t%s' % (tag, count)
+
+print '=======\t========='

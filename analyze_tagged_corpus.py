@@ -49,16 +49,18 @@ if args.trace:
 wc = 0
 tag_counts = FreqDist()
 
-if args.corpus in ['conll2000', 'switchboard']:
-	# TODO: override to support simplified tags
-	if args.simplify_tags:
-		raise ValueError('%s does not support simplified tags' % args.corpus)
-	
+# TODO: override to support simplified tags
+if args.corpus == 'switchboard' and args.simplify_tags:
+	raise ValueError('%s does not support simplified tags' % args.corpus)
+elif args.corpus == 'conll2000':
 	kwargs = {}
 else:
 	kwargs = {'simplify_tags': args.simplify_tags}
 
 for word, tag in tagged_corpus.tagged_words(**kwargs):
+	if args.corpus == 'conll2000' and args.simplify_tags:
+		tag = simplify_wsj_tag(tag)
+	
 	wc += 1
 	tag_counts.inc(tag)
 

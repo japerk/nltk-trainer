@@ -48,11 +48,12 @@ if args.trace:
 
 wc = 0
 tag_counts = FreqDist()
+word_set = set()
 
 # TODO: override to support simplified tags
 if args.corpus == 'switchboard' and args.simplify_tags:
 	raise ValueError('%s does not support simplified tags' % args.corpus)
-elif args.corpus == 'conll2000':
+elif args.corpus in ['conll2000', 'switchboard']:
 	kwargs = {}
 else:
 	kwargs = {'simplify_tags': args.simplify_tags}
@@ -63,12 +64,13 @@ for word, tag in tagged_corpus.tagged_words(**kwargs):
 	
 	wc += 1
 	tag_counts.inc(tag)
+	word_set.add(word)
 
 ############
 ## output ##
 ############
 
-print '%d words\n%d tags\n' % (wc, len(tag_counts))
+print '%d total words\n%d unique words\n%d tags\n' % (wc, len(word_set), len(tag_counts))
 
 if args.sort == 'tag':
 	sort_key = lambda (t, c): t

@@ -50,16 +50,13 @@ wc = 0
 tag_counts = FreqDist()
 word_set = set()
 
-# TODO: override to support simplified tags
-if args.corpus == 'switchboard' and args.simplify_tags:
-	raise ValueError('%s does not support simplified tags' % args.corpus)
-elif args.corpus in ['conll2000', 'switchboard']:
+if args.corpus in ['conll2000', 'switchboard']:
 	kwargs = {}
 else:
 	kwargs = {'simplify_tags': args.simplify_tags}
 
 for word, tag in tagged_corpus.tagged_words(**kwargs):
-	if args.corpus == 'conll2000' and args.simplify_tags:
+	if args.corpus in ['conll2000', 'switchboard'] and args.simplify_tags:
 		tag = simplify_wsj_tag(tag)
 	
 	wc += 1

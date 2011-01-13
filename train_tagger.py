@@ -6,6 +6,7 @@ from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesCl
 from nltk.corpus.reader import SwitchboardCorpusReader, NPSChatCorpusReader, IndianCorpusReader
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag import ClassifierBasedPOSTagger
+from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
 from nltk_trainer.tagging.training import train_brill_tagger
 
@@ -35,6 +36,8 @@ tagger_group = parser.add_argument_group('Tagger Choices')
 tagger_group.add_argument('--default', default='-None-',
 	help='''The default tag "%(default)s". Set this to a different tag, such as "NN",
 to change the default tag.''')
+tagger_group.add_argument('--simplify_tags', action='store_true', default=False,
+	help='Use simplified tags')
 
 sequential_group = parser.add_argument_group('Sequential Tagger')
 sequential_group.add_argument('--sequential', default='aubt',
@@ -58,6 +61,7 @@ classifier_group.add_argument('--classifier', default=None,
 Maxent uses the default Maxent training algorithm, either CG or iis.''')
 classifier_group.add_argument('--cutoff_prob', default=0, type=float,
 	help='Cutoff probability for classifier tagger to backoff to previous tagger')
+# TODO: phonetic feature options
 
 brill_group = parser.add_argument_group('Brill Tagger Options')
 brill_group.add_argument('--brill', action='store_true', default=False,
@@ -114,9 +118,15 @@ tagged_corpus.fileids()
 # fileid is used for corpus naming, if it exists
 fileid = args.fileid
 kwargs = {}
-# TODO: simplify_tags kwarg
+
 if args.fileid:
 	kwargs['fileids'] = [args.fileid]
+# all other corpora are assumed to support simplify_tags kwarg
+if args.simplify_tags and args.corpus not in ['conll2000', 'switchboard', 'pl196x']:
+	kwargs['simplify_tags'] = True
+# these corpora do not support simplify_tags, and have no known workaround
+elif args.simplify_tags and args.corpus in ['pl196x']:
+	raise ValueError('%s does not support simplify_tags' % args.corpus)
 
 if isinstance(tagged_corpus, SwitchboardCorpusReader):
 	if args.fileid:
@@ -133,6 +143,9 @@ elif isinstance(tagged_corpus, IndianCorpusReader):
 	tagged_sents = tagged_corpus.tagged_sents(**kwargs)
 else:
 	tagged_sents = tagged_corpus.tagged_sents(**kwargs)
+# manual simplification is needed for these corpora
+if args.simplify_tags and args.corpus in ['conll2000', 'switchboard']:
+	tagged_sents = [[(word, simplify_wsj_tag(tag)) for (word, tag) in sent] for sent in tagged_sents]
 
 # TODO: support generic tagged corpus readers: TaggedCorpusReader,
 # BracketParseCorpusReader, ConllChunkCorpusReader
@@ -239,9 +252,9 @@ if args.classifier:
 		backoff=tagger, cutoff_prob=args.cutoff_prob,
 		classifier_builder=classifier_builder)
 
-###################
-## other taggers ##
-###################
+##################
+## brill tagger ##
+##################
 
 if args.brill:
 	tagger = train_brill_tagger(tagger, train_sents, args.template_bounds,

@@ -9,6 +9,7 @@ from nltk.tag import ClassifierBasedPOSTagger
 from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
 from nltk_trainer.tagging.training import train_brill_tagger
+from nltk_trainer.tagging.taggers import PhoneticClassifierBasedPOSTagger
 
 ########################################
 ## command options & argument parsing ##
@@ -54,15 +55,6 @@ Negative numbers are suffixes, positive numbers are prefixes.
 You can use this option multiple times to create multiple AffixTaggers with different affixes.
 The affixes will be used in the order given.''')
 
-classifier_group = parser.add_argument_group('Classifier Based Tagger')
-classifier_group.add_argument('--classifier', default=None,
-	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
-	help='''ClassifierBasedPOSTagger algorithm to use, default is %(default)s.
-Maxent uses the default Maxent training algorithm, either CG or iis.''')
-classifier_group.add_argument('--cutoff_prob', default=0, type=float,
-	help='Cutoff probability for classifier tagger to backoff to previous tagger')
-# TODO: phonetic feature options
-
 brill_group = parser.add_argument_group('Brill Tagger Options')
 brill_group.add_argument('--brill', action='store_true', default=False,
 	help='Train a Brill Tagger in front of the other tagger.')
@@ -72,11 +64,25 @@ The default is %(default)d.''')
 brill_group.add_argument('--max_rules', type=int, default=200)
 brill_group.add_argument('--min_score', type=int, default=2)
 
-eval_group = parser.add_argument_group('Tagger Evaluation',
-	'Evaluation metrics for part-of-speech taggers')
-eval_group.add_argument('--no-eval', action='store_true', default=False,
-	help="don't do any evaluation")
-# TODO: are there any metrics other than accuracy?
+classifier_group = parser.add_argument_group('Classifier Based Tagger')
+classifier_group.add_argument('--classifier', default=None,
+	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
+	help='''ClassifierBasedPOSTagger algorithm to use, default is %(default)s.
+Maxent uses the default Maxent training algorithm, either CG or iis.''')
+classifier_group.add_argument('--cutoff_prob', default=0, type=float,
+	help='Cutoff probability for classifier tagger to backoff to previous tagger')
+
+phonetic_group = parser.add_argument_group('Phonetic Feature Options for a Classifier Based Tagger')
+phonetic_group.add_argument('--metaphone', action='store_true',
+	default=False, help='Use metaphone feature')
+phonetic_group.add_argument('--double-metaphone', action='store_true',
+	default=False, help='Use double metaphone feature')
+phonetic_group.add_argument('--soundex', action='store_true',
+	default=False, help='Use soundex feature')
+phonetic_group.add_argument('--nysiis', action='store_true',
+	default=False, help='Use NYSIIS feature')
+phonetic_group.add_argument('--caverphone', action='store_true',
+	default=False, help='Use caverphone feature')
 
 maxent_group = parser.add_argument_group('Maxent Classifier Tagger',
 	'These options only apply when a Maxent classifier is chosen.')
@@ -96,6 +102,12 @@ decisiontree_group.add_argument('--depth_cutoff', default=100, type=int,
 	help='default is 100')
 decisiontree_group.add_argument('--support_cutoff', default=10, type=int,
 	help='default is 10')
+
+eval_group = parser.add_argument_group('Tagger Evaluation',
+	'Evaluation metrics for part-of-speech taggers')
+eval_group.add_argument('--no-eval', action='store_true', default=False,
+	help="don't do any evaluation")
+# TODO: word coverage of test words, how many get a tag != '-NONE-'
 
 args = parser.parse_args()
 
@@ -242,15 +254,31 @@ elif args.classifier:
 	classifier_train_kwargs['trace'] = args.trace
 
 if args.classifier:
-	if args.trace:
-		print 'training a %s ClassifierBasedPOSTagger' % args.classifier
-	
 	def classifier_builder(train_feats):
 		return classifier_train(train_feats, **classifier_train_kwargs)
 	
-	tagger = ClassifierBasedPOSTagger(train=train_sents, verbose=args.trace,
-		backoff=tagger, cutoff_prob=args.cutoff_prob,
-		classifier_builder=classifier_builder)
+	kwargs = {
+		'train': train_sents,
+		'verbose': args.trace,
+		'backoff': tagger,
+		'cutoff_prob': args.cutoff_prob,
+		'classifier_builder': classifier_builder
+	}
+	
+	phonetic_keys = ['metaphone', 'double_metaphone', 'soundex', 'nysiis', 'caverphone']
+	
+	if any([getattr(args, key) for key in phonetic_keys]):
+		cls = PhoneticClassifierBasedPOSTagger
+		
+		for key in phonetic_keys:
+			kwargs[key] = getattr(args, key)
+	else:
+		cls = ClassifierBasedPOSTagger
+	
+	if args.trace:
+		print 'training a %s %s' % (args.classifier, cls.__name__)
+	
+	tagger = cls(**kwargs)
 
 ##################
 ## brill tagger ##

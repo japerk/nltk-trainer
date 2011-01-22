@@ -1,10 +1,11 @@
-import argparse
-import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag
+import argparse, collections
+import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
-from nltk.probability import ConditionalFreqDist
+from nltk.probability import FreqDist
 from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
 
+# support all corpus readers that have the sents() method
 reader_classes = [cls for cls in dir(nltk.corpus.reader) if hasattr(getattr(nltk.corpus.reader, cls), 'sents')]
 
 ########################################
@@ -21,11 +22,12 @@ parser.add_argument('--tagger', default=nltk.tag._POS_TAGGER,
 default is NLTK's default tagger''')
 parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to 1. 0 is no trace output.')
+parser.add_argument('--metrics', action='store_true', default=False,
+	help='Use tagged sentences to determine tagger accuracy and tag precision & recall')
 
 corpus_group = parser.add_argument_group('Corpus Options')
-# TODO: any plaintext corpus reader should work, or an import path to the reader class
 corpus_group.add_argument('--reader', default='PlaintextCorpusReader',
-	choices=reader_classes,
+	choices=reader_classes, # TODO: will have to allow unknown import paths
 	help='specify plaintext or part-of-speech tagged corpus')
 corpus_group.add_argument('--fraction', default=1.0, type=float,
 	help='''The fraction of the corpus to use for testing coverage''')
@@ -43,9 +45,14 @@ elif hasattr(nltk.corpus, args.corpus):
 elif hasattr(nltk.corpus.reader, args.reader):
 	reader_cls = getattr(nltk.corpus.reader, args.reader)
 	corpus = reader_cls(args.corpus, '.+')
+# TODO: try to import args.reader as an import path to a custom corpus reader
 else:
 	raise ValueError('do not know how to load corpus %s with reader %s' % (args.corpus, args.reader))
-	
+
+# TODO: support corpora with alternatives to tagged_sents that work just as well
+if args.metrics and not hasattr(corpus, 'tagged_sents'):
+	raise ValueError('%s does not support metrics' % args.corpus)
+
 # TODO: may also need to support optional args for initialization of reader class
 
 ############
@@ -62,18 +69,60 @@ tagger = nltk.data.load(args.tagger)
 #######################
 
 if args.trace:
-	print 'analyzing tag coverage of %s with %s' % (args.corpus, tagger.__class__.__name__)
+	print 'analyzing tag coverage of %s with %s\n' % (args.corpus, tagger.__class__.__name__)
 
-tag_word_freqs = ConditionalFreqDist()
+tags_found = FreqDist()
+unknown_words = set()
 
-for sent in corpus.sents():
-	for word, tag in tagger.tag(sent):
-		tag_word_freqs[tag].inc(word)
-
-print '  Tag  \t  Count  '
-print '=======\t========='
+if args.metrics:
+	tags_actual = FreqDist()
+	tag_refs = []
+	tag_test = []
+	tag_word_refs = collections.defaultdict(set)
+	tag_word_test = collections.defaultdict(set)
 	
-for tag in sorted(tag_word_freqs.conditions()):
-	print '%s\t%d' % (tag, tag_word_freqs[tag].N())
-
-print '=======\t========='
+	for tagged_sent in corpus.tagged_sents():
+		for word, tag in tagged_sent:
+			tags_actual.inc(tag)
+			tag_refs.append(tag)
+			tag_word_refs[tag].add(word)
+		
+		for word, tag in tagger.tag(nltk.tag.untag(tagged_sent)):
+			tags_found.inc(tag)
+			tag_test.append(tag)
+			tag_word_test[tag].add(word)
+			
+			if tag == '-NONE-':
+				unknown_words.add(word)
+	
+	print 'Accuracy: %f' % nltk.metrics.accuracy(tag_refs, tag_test)
+	print 'Unknown words: %d' % len(unknown_words)
+	
+	if args.trace:
+		print ', '.join(sorted(unknown_words))
+	
+	print ''
+	print '  Tag      Found      Actual      Precision      Recall  '
+	print '=======  =========  ==========  =============  =========='
+	
+	for tag in sorted(set(tags_found.keys()) | set(tags_actual.keys())):
+		found = tags_found[tag]
+		actual = tags_actual[tag]
+		precision = nltk.metrics.precision(tag_word_refs[tag], tag_word_test[tag])
+		recall = nltk.metrics.recall(tag_word_refs[tag], tag_word_test[tag])
+		print '  '.join([tag.ljust(7), str(found).rjust(9), str(actual).rjust(10),
+			str(precision).ljust(13)[:13], str(recall).ljust(10)[:13]])
+	
+	print '=======  =========  ==========  =============  =========='
+else:
+	for sent in corpus.sents():
+		for word, tag in tagger.tag(sent):
+			tags_found.inc(tag)
+	
+	print '  Tag      Found  '
+	print '=======  ========='
+	
+	for tag in sorted(tags_found.samples()):
+		print '  '.join([tag.ljust(7), str(tags_found[tag]).rjust(9)])
+	
+	print '=======  ========='

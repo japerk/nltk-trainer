@@ -73,13 +73,14 @@ To train on the switchboard corpus::
 Analyzing Tagger Coverage
 -------------------------
 
-The ``analyze_tagger_coverage.py`` script will run a part-of-speech tagger on a corpus to determine how many times each tag is found. Here's an example using the NLTK default tagger on the treebank corpus::
+The ``analyze_tagger_coverage.py`` script will run a part-of-speech tagger on a corpus to determine how many times each tag is found.
+
+Here's an example using the NLTK default tagger on the treebank corpus::
 	python analyze_tagger_coverage.py treebank
 
-To get detailed metrics on each tag, you can use the --metrics option. This requires using a tagged corpus in order to compare actual tags against tags found by the tagger::
-	python analyze_tagger_coverage.py treebank --metrics
+To get detailed metrics on each tag, you can use the ``--metrics`` option. This requires using a tagged corpus in order to compare actual tags against tags found by the tagger. See `NLTK Default Tagger Treebank Tag Coverage<http://streamhacker.com/2011/01/24/nltk-default-tagger-treebank-tag-coverage/>`_ and `NLTK Default Tagger CoNLL2000 Tag Coverage <http://streamhacker.com/2011/01/25/nltk-default-tagger-conll2000-tag-coverage/>`_ for examples and statistics.
 
-To use analyze the coverage of a different tagger, use the --tagger option with a path to the pickled tagger::
+To analyze the coverage of a different tagger, use the ``--tagger`` option with a path to the pickled tagger::
 	python analyze_tagger_coverage.py treebank --tagger /path/to/tagger.pickle
 
 For a complete list of usage options::
@@ -104,3 +105,6 @@ To sort the output by tag count from highest to lowest::
 
 To see simplified tags, instead of standard tags::
 	python analyze_tagged_corpus.py treebank --simplify_tags
+
+For a complete list of usage options::
+	python analyze_tagged_corpus.py --help

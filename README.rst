@@ -7,7 +7,7 @@ NLTK Trainer exists to make training and evaluating NLTK objects as easy as poss
 Requirements
 ------------
 
-You must have Python 2.6 with `argparse <http://docs.python.org/library/argparse.html>`_ and `NLTK <http://www.nltk.org/>`_ 2.0 installed. `NumPy <http://numpy.scipy.org/>`_, `SciPy <http://www.scipy.org/>`_, and `megam <http://www.cs.utah.edu/~hal/megam/>`_ are recommended for training Maxent classifiers.
+You must have Python 2.6 with `argparse <http://pypi.python.org/pypi/argparse/>`_ and `NLTK <http://www.nltk.org/>`_ 2.0 installed. `NumPy <http://numpy.scipy.org/>`_, `SciPy <http://www.scipy.org/>`_, and `megam <http://www.cs.utah.edu/~hal/megam/>`_ are recommended for training Maxent classifiers.
 
 
 Training Classifiers
@@ -90,10 +90,11 @@ Analyzing a Tagged Corpus
 -------------------------
 
 The ``analyze_tagged_corpus.py`` script will show the following statistics about a tagged corpus:
-* total number of words
-* number of unique words
-* number of tags
-* the number of times each tag occurs
+
+ * total number of words
+ * number of unique words
+ * number of tags
+ * the number of times each tag occurs
 
 To analyze the treebank corpus::
 	python analyze_tagged_corpus.py treebank

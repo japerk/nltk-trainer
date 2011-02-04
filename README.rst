@@ -68,3 +68,38 @@ To train a unigram tagger::
 
 To train on the switchboard corpus::
 	python train_tagger.py switchboard
+
+
+Analyzing Tagger Coverage
+-------------------------
+
+The ``analyze_tagger_coverage.py`` script will run a part-of-speech tagger on a corpus to determine how many times each tag is found. Here's an example using the NLTK default tagger on the treebank corpus::
+	python analyze_tagger_coverage.py treebank
+
+To get detailed metrics on each tag, you can use the --metrics option. This requires using a tagged corpus in order to compare actual tags against tags found by the tagger::
+	python analyze_tagger_coverage.py treebank --metrics
+
+To use analyze the coverage of a different tagger, use the --tagger option with a path to the pickled tagger::
+	python analyze_tagger_coverage.py treebank --tagger /path/to/tagger.pickle
+
+For a complete list of usage options::
+	python analyze_tagger_coverage.py --help
+
+
+Analyzing a Tagged Corpus
+-------------------------
+
+The ``analyze_tagged_corpus.py`` script will show the following statistics about a tagged corpus:
+* total number of words
+* number of unique words
+* number of tags
+* the number of times each tag occurs
+
+To analyze the treebank corpus::
+	python analyze_tagged_corpus.py treebank
+
+To sort the output by tag count from highest to lowest::
+	python analyze_tagged_corpus.py treebank --sort count --reverse
+
+To see simplified tags, instead of standard tags::
+	python analyze_tagged_corpus.py treebank --simplify_tags

@@ -46,6 +46,31 @@ Evaluate the classifier by training on 3/4 of the paragraphs and testing against
 	python train_classifier.py --instances paras --algorithm NaiveBayes --fraction 0.75 --no-pickle movie_reviews
 
 
+Using a Trained Classifier
+--------------------------
+
+You can use a trained classifier by loading the pickle file using `nltk.data.load <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.data-module.html#load>`_::
+	>>> classifier = nltk.data.load("classifiers/NAME_OF_CLASSIFIER.pickle")
+
+Or if your classifier pickle file is not in a ``nltk_data`` subdirectory, you can load it with `pickle.load <http://docs.python.org/library/pickle.html#pickle.load>`_::
+	>>> classifier = pickle.load(open("/path/to/NAME_OF_CLASSIFIER.pickle"))
+
+Either method will return an object that supports the `ClassifierI interface <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.classify.api.ClassifierI-class.html>`_. 
+
+Once you have a ``classifier`` object, you can use it to classify word features with the ``classifier.classify(feats)`` method, which returns a label::
+	>>> words = ['some', 'words', 'in', 'a', 'sentence']
+	>>> feats = dict([(word, True) for word in words])
+	>>> classifier.classify(feats)
+
+If you used the ``--bigrams`` option, you should include bigrams in the dictionary using `nltk.util.bigrams(words) <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.util-module.html#bigrams>`_::
+	>>> from nltk.util import bigrams
+	>>> words = ['some', 'words', 'in', 'a', 'sentence']
+	>>> feats = dict([(word, True) for word in words + bigrams(words)])
+	>>> classifier.classify(feats)
+
+The list of words you use for creating the feature dictionary should be created by `tokenizing <http://text-processing.com/demo/tokenize/>`_ the appropriate text instances: sentences, paragraphs, or files depending on the ``--instances`` option.
+
+
 Training Part of Speech Taggers
 -------------------------------
 
@@ -68,6 +93,23 @@ To train a unigram tagger::
 
 To train on the switchboard corpus::
 	python train_tagger.py switchboard
+
+
+Using a Trained Tagger
+----------------------
+
+You can use a trained tagger by loading the pickle file using `nltk.data.load <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.data-module.html#load>`_::
+	>>> tagger = nltk.data.load("taggers/NAME_OF_TAGGER.pickle")
+
+Or if your tagger pickle file is not in a ``nltk_data`` subdirectory, you can load it with `pickle.load <http://docs.python.org/library/pickle.html#pickle.load>`_::
+	>>> tagger = pickle.load(open("/path/to/NAME_OF_TAGGER.pickle"))
+
+Either method will return an object that supports the `TaggerI interface <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.api.TaggerI-class.html>`_.
+
+Once you have a ``tagger`` object, you can use it to tag sentences (or lists of words) with the ``tagger.tag(words)`` method::
+	>>> tagger.tag(['some', 'words', 'in', 'a', 'sentence'])
+
+``tagger.tag(words)`` will return a list of 2-tuples of the form ``[(word, tag)]``.
 
 
 Analyzing Tagger Coverage

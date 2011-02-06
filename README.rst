@@ -92,7 +92,7 @@ To train on the switchboard corpus::
 	python train_tagger.py switchboard
 
 To train a custom corpus, whose fileids end in ".pos", using a `TaggedCorpusReader <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.corpus.reader.tagged.TaggedCorpusReader-class.html>`_::
-	python train_tagger.py /path/to/corpus --reader nltk.corpus.reader.tagged.TaggedCorpusReader --fileids '.+\.pos'
+	python train_tagger.py /path/to/corpus --reader nltk.corpus.reader.tagged.TaggedCorpusReader --fileids '.+\\.pos'
 
 The corpus path can be absolute, or relative to a nltk_data directory. For example, both ``corpora/treebank/tagged`` and ``/usr/share/nltk_data/corpora/treebank/tagged`` will work.
 
@@ -134,7 +134,7 @@ To analyze the coverage of a different tagger, use the ``--tagger`` option with 
 	python analyze_tagger_coverage.py treebank --tagger /path/to/tagger.pickle
 
 To analyze coverage on a custom corpus, whose fileids end in ".pos", using a `TaggedCorpusReader <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.corpus.reader.tagged.TaggedCorpusReader-class.html>`_::
-	python analyze_tagger_coverage.py /path/to/corpus --reader nltk.corpus.reader.tagged.TaggedCorpusReader --fileids '.+\.pos'
+	python analyze_tagger_coverage.py /path/to/corpus --reader nltk.corpus.reader.tagged.TaggedCorpusReader --fileids '.+\\.pos'
 
 The corpus path can be absolute, or relative to a nltk_data directory. For example, both ``corpora/treebank/tagged`` and ``/usr/share/nltk_data/corpora/treebank/tagged`` will work.
 
@@ -162,7 +162,7 @@ To see simplified tags, instead of standard tags::
 	python analyze_tagged_corpus.py treebank --simplify_tags
 
 To analyze a custom corpus, whose fileids end in ".pos", using a `TaggedCorpusReader <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.corpus.reader.tagged.TaggedCorpusReader-class.html>`_::
-	python analyze_tagged_corpus.py /path/to/corpus --reader nltk.corpus.reader.tagged.TaggedCorpusReader --fileids '.+\.pos'
+	python analyze_tagged_corpus.py /path/to/corpus --reader nltk.corpus.reader.tagged.TaggedCorpusReader --fileids '.+\\.pos'
 
 The corpus path can be absolute, or relative to a nltk_data directory. For example, both ``corpora/treebank/tagged`` and ``/usr/share/nltk_data/corpora/treebank/tagged`` will work.
 

@@ -3,7 +3,7 @@ import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
 from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
+from nltk_trainer.tagging import readers
 
 # support all corpus readers that have the sents() method
 reader_classes = [cls for cls in dir(nltk.corpus.reader) if hasattr(getattr(nltk.corpus.reader, cls), 'sents')]
@@ -16,7 +16,9 @@ parser = argparse.ArgumentParser(description='Analyze a part-of-speech tagged co
 	formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('corpus',
-	help='corpus name/path relative to an nltk_data directory')
+	help='''The name of a tagged corpus included with NLTK, such as treebank,
+brown, cess_esp, floresta, or the root path to a corpus directory,
+which can be either an absolute path or relative to a nltk_data directory.''')
 parser.add_argument('--tagger', default=nltk.tag._POS_TAGGER,
 	help='''pickled tagger filename/path relative to an nltk_data directory
 default is NLTK's default tagger''')
@@ -25,10 +27,12 @@ parser.add_argument('--trace', default=1, type=int,
 parser.add_argument('--metrics', action='store_true', default=False,
 	help='Use tagged sentences to determine tagger accuracy and tag precision & recall')
 
-corpus_group = parser.add_argument_group('Corpus Options')
-corpus_group.add_argument('--reader', default='PlaintextCorpusReader',
-	choices=reader_classes, # TODO: will have to allow unknown import paths
-	help='specify plaintext or part-of-speech tagged corpus')
+corpus_group = parser.add_argument_group('Corpus Reader Options')
+corpus_group.add_argument('--reader', default=None,
+	help='''Full module path to a corpus reader class, such as
+nltk.corpus.reader.tagged.TaggedCorpusReader''')
+corpus_group.add_argument('--fileids', default=None,
+	help='Specify fileids to load from corpus')
 corpus_group.add_argument('--fraction', default=1.0, type=float,
 	help='''The fraction of the corpus to use for testing coverage''')
 
@@ -38,22 +42,22 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-if args.corpus == 'timit':
-	corpus = LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader, '.+\.tags')
-elif hasattr(nltk.corpus, args.corpus):
-	corpus = getattr(nltk.corpus, args.corpus)
-elif hasattr(nltk.corpus.reader, args.reader):
-	reader_cls = getattr(nltk.corpus.reader, args.reader)
-	corpus = reader_cls(args.corpus, '.+')
+corpus = readers.load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
+
+#if args.corpus == 'timit':
+#	corpus = LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader, '.+\.tags')
+#elif hasattr(nltk.corpus, args.corpus):
+#	corpus = getattr(nltk.corpus, args.corpus)
+#elif hasattr(nltk.corpus.reader, args.reader):
+#	reader_cls = getattr(nltk.corpus.reader, args.reader)
+#	corpus = reader_cls(args.corpus, '.+')
 # TODO: try to import args.reader as an import path to a custom corpus reader
-else:
-	raise ValueError('do not know how to load corpus %s with reader %s' % (args.corpus, args.reader))
+#else:
+#	raise ValueError('do not know how to load corpus %s with reader %s' % (args.corpus, args.reader))
 
 # TODO: support corpora with alternatives to tagged_sents that work just as well
 if args.metrics and not hasattr(corpus, 'tagged_sents'):
 	raise ValueError('%s does not support metrics' % args.corpus)
-
-# TODO: may also need to support optional args for initialization of reader class
 
 ############
 ## tagger ##

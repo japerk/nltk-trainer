@@ -3,7 +3,7 @@ import nltk.corpus
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
 from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
+from nltk_trainer.tagging import readers
 
 ########################################
 ## command options & argument parsing ##
@@ -14,14 +14,24 @@ parser = argparse.ArgumentParser(description='Analyze a part-of-speech tagged co
 
 parser.add_argument('corpus',
 	help='''The name of a tagged corpus included with NLTK, such as treebank,
-brown, cess_esp, or floresta''')
+brown, cess_esp, floresta, or the root path to a corpus directory,
+which can be either an absolute path or relative to a nltk_data directory.''')
 parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to %(default)d. 0 is no trace output.')
-parser.add_argument('--simplify_tags', action='store_true', default=False,
+
+corpus_group = parser.add_argument_group('Corpus Reader Options')
+corpus_group.add_argument('--reader', default=None,
+	help='''Full module path to a corpus reader class, such as
+nltk.corpus.reader.tagged.TaggedCorpusReader''')
+corpus_group.add_argument('--fileids', default=None,
+	help='Specify fileids to load from corpus')
+corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
 	help='Use simplified tags')
-parser.add_argument('--sort', default='tag', choices=['tag', 'count'],
+
+sort_group = parser.add_argument_group('Tag Count Sorting Options')
+sort_group.add_argument('--sort', default='tag', choices=['tag', 'count'],
 	help='Sort key, defaults to %(default)s')
-parser.add_argument('--reverse', action='store_true', default=False,
+sort_group.add_argument('--reverse', action='store_true', default=False,
 	help='Sort in revere order')
 
 args = parser.parse_args()
@@ -30,11 +40,7 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-if args.corpus == 'timit':
-	tagged_corpus = LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader,
-		'.+\.tags', tag_mapping_function=simplify_wsj_tag)
-else:
-	tagged_corpus = getattr(nltk.corpus, args.corpus)
+tagged_corpus = readers.load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 
 if not tagged_corpus:
 	raise ValueError('%s is an unknown corpus')

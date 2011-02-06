@@ -15,9 +15,6 @@ Training Classifiers
 
 Example usage with the movie_reviews corpus can be found in `Training Binary Text Classifiers with NLTK Trainer <http://streamhacker.com/2010/10/25/training-binary-text-classifiers-nltk-trainer/>`_.
 
-For a complete list of usage options::
-	python train_classifier.py --help
-
 Train a binary NaiveBayes classifier on the movie_reviews corpus, using paragraphs as the training instances::
 	python train_classifier.py --instances paras --algorithm NaiveBayes movie_reviews
 
@@ -44,6 +41,9 @@ Train on sentences::
 
 Evaluate the classifier by training on 3/4 of the paragraphs and testing against the remaing 1/4, without pickling::
 	python train_classifier.py --instances paras --algorithm NaiveBayes --fraction 0.75 --no-pickle movie_reviews
+
+For a complete list of usage options::
+	python train_classifier.py --help
 
 
 Using a Trained Classifier
@@ -76,9 +76,6 @@ Training Part of Speech Taggers
 
 The ``train_tagger.py`` script can use any corpus included with NLTK that implements a ``tagged_sents()`` method. It can also train on the ``timit`` corpus, which includes tagged sentences that are not available through the ``TimitCorpusReader``.
 
-For a complete list of usage options::
-	python train_tagger.py --help
-
 Train the default sequential backoff tagger on the treebank corpus::
 	python train_tagger.py treebank
 
@@ -93,6 +90,17 @@ To train a unigram tagger::
 
 To train on the switchboard corpus::
 	python train_tagger.py switchboard
+
+To train a custom corpus, whose fileids end in ".pos", using a `TaggedCorpusReader <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.corpus.reader.tagged.TaggedCorpusReader-class.html>`_::
+	python train_tagger.py /path/to/corpus --reader nltk.corpus.reader.tagged.TaggedCorpusReader --fileids '.+\.pos'
+
+The corpus path can be absolute, or relative to a nltk_data directory. For example, both ``corpora/treebank/tagged`` and ``/usr/share/nltk_data/corpora/treebank/tagged`` will work.
+
+You can also restrict the files used with the ``--fileids`` option::
+	python train_tagger.py conll2000 --fileids train.txt
+
+For a complete list of usage options::
+	python train_tagger.py --help
 
 
 Using a Trained Tagger
@@ -125,6 +133,11 @@ To get detailed metrics on each tag, you can use the ``--metrics`` option. This 
 To analyze the coverage of a different tagger, use the ``--tagger`` option with a path to the pickled tagger::
 	python analyze_tagger_coverage.py treebank --tagger /path/to/tagger.pickle
 
+To analyze coverage on a custom corpus, whose fileids end in ".pos", using a `TaggedCorpusReader <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.corpus.reader.tagged.TaggedCorpusReader-class.html>`_::
+	python analyze_tagger_coverage.py /path/to/corpus --reader nltk.corpus.reader.tagged.TaggedCorpusReader --fileids '.+\.pos'
+
+The corpus path can be absolute, or relative to a nltk_data directory. For example, both ``corpora/treebank/tagged`` and ``/usr/share/nltk_data/corpora/treebank/tagged`` will work.
+
 For a complete list of usage options::
 	python analyze_tagger_coverage.py --help
 
@@ -147,6 +160,11 @@ To sort the output by tag count from highest to lowest::
 
 To see simplified tags, instead of standard tags::
 	python analyze_tagged_corpus.py treebank --simplify_tags
+
+To analyze a custom corpus, whose fileids end in ".pos", using a `TaggedCorpusReader <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.corpus.reader.tagged.TaggedCorpusReader-class.html>`_::
+	python analyze_tagged_corpus.py /path/to/corpus --reader nltk.corpus.reader.tagged.TaggedCorpusReader --fileids '.+\.pos'
+
+The corpus path can be absolute, or relative to a nltk_data directory. For example, both ``corpora/treebank/tagged`` and ``/usr/share/nltk_data/corpora/treebank/tagged`` will work.
 
 For a complete list of usage options::
 	python analyze_tagged_corpus.py --help

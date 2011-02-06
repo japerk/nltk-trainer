@@ -7,7 +7,7 @@ from nltk.corpus.reader import SwitchboardCorpusReader, NPSChatCorpusReader, Ind
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag import ClassifierBasedPOSTagger
 from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
+from nltk_trainer.tagging import readers
 from nltk_trainer.tagging.training import train_brill_tagger
 from nltk_trainer.tagging.taggers import PhoneticClassifierBasedPOSTagger
 
@@ -20,8 +20,8 @@ parser = argparse.ArgumentParser(description='Train a NLTK Classifier',
 
 parser.add_argument('corpus',
 	help='''The name of a tagged corpus included with NLTK, such as treebank,
-brown, cess_esp, or floresta, or the root path to the corpus directory,
-either an absolute path or relative to a nltk_data directory.''')
+brown, cess_esp, floresta, or the root path to a corpus directory,
+which can be either an absolute path or relative to a nltk_data directory.''')
 parser.add_argument('--filename',
 	help='''filename/path for where to store the pickled tagger.
 The default is {corpus}_{algorithm}.pickle in ~/nltk_data/taggers''')
@@ -29,8 +29,6 @@ parser.add_argument('--no-pickle', action='store_true', default=False,
 	help="Don't pickle and save the tagger")
 parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to %(default)d. 0 is no trace output.')
-parser.add_argument('--fraction', default=1.0, type=float,
-	help='Fraction of corpus to use for training, defaults to %(default)f')
 
 corpus_group = parser.add_argument_group('Corpus Reader Options')
 corpus_group.add_argument('--reader', default=None,
@@ -38,6 +36,8 @@ corpus_group.add_argument('--reader', default=None,
 nltk.corpus.reader.tagged.TaggedCorpusReader''')
 corpus_group.add_argument('--fileids', default=None,
 	help='Specify fileids to load from corpus')
+corpus_group.add_argument('--fraction', default=1.0, type=float,
+	help='Fraction of corpus to use for training, defaults to %(default)f')
 
 tagger_group = parser.add_argument_group('Tagger Choices')
 tagger_group.add_argument('--default', default='-None-',
@@ -121,30 +121,7 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-if args.corpus == 'timit':
-	tagged_corpus = LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader, '.+\.tags')
-else:
-	tagged_corpus = getattr(nltk.corpus, args.corpus, None)
-
-if not tagged_corpus:
-	if not args.reader:
-		raise ValueError('you must specify a corpus reader')
-	
-	if not args.fileids:
-		raise ValueError('you must specify the corpus fileids')
-	
-	if os.path.isdir(args.corpus):
-		root = args.corpus
-	else:
-		try:
-			root = nltk.data.find(args.corpus)
-		except LookupError:
-			raise ValueError('cannot find corpus path %s' % args.corpus)
-	
-	reader_path, reader_name = args.reader.rsplit('.', 1)
-	mod = __import__(reader_path, globals(), locals(), [reader_name])
-	reader_cls = getattr(mod, reader_name)
-	tagged_corpus = reader_cls(root, args.fileids)
+tagged_corpus = readers.load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 
 if not tagged_corpus:
 	raise ValueError('%s is an unknown corpus')
@@ -157,8 +134,6 @@ tagged_corpus.fileids()
 fileids = args.fileids
 kwargs = {}
 
-#if args.fileids:
-#	kwargs['fileids'] = [args.fileids]
 # all other corpora are assumed to support simplify_tags kwarg
 if args.simplify_tags and args.corpus not in ['conll2000', 'switchboard', 'pl196x']:
 	kwargs['simplify_tags'] = True
@@ -336,9 +311,6 @@ if not args.no_pickle:
 	else:
 		# use the last part of the corpus name/path as the prefix
 		parts = [os.path.split(args.corpus.rstrip('/'))[-1]]
-		
-		#if fileids:
-		#	parts.append(os.path.splitext(fileids)[0])
 		
 		if args.brill:
 			parts.append('brill')

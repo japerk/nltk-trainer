@@ -20,7 +20,8 @@ parser = argparse.ArgumentParser(description='Train a NLTK Classifier',
 
 parser.add_argument('corpus',
 	help='''The name of a tagged corpus included with NLTK, such as treebank,
-brown, cess_esp, or floresta''')
+brown, cess_esp, or floresta, or the root path to the corpus directory,
+either an absolute path or relative to a nltk_data directory.''')
 parser.add_argument('--filename',
 	help='''filename/path for where to store the pickled tagger.
 The default is {corpus}_{algorithm}.pickle in ~/nltk_data/taggers''')
@@ -30,8 +31,13 @@ parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to %(default)d. 0 is no trace output.')
 parser.add_argument('--fraction', default=1.0, type=float,
 	help='Fraction of corpus to use for training, defaults to %(default)f')
-parser.add_argument('--fileid', default=None,
-	help='Specify and individual fileid to use for training')
+
+corpus_group = parser.add_argument_group('Corpus Reader Options')
+corpus_group.add_argument('--reader', default=None,
+	help='''Full module path to a corpus reader class, such as
+nltk.corpus.reader.tagged.TaggedCorpusReader''')
+corpus_group.add_argument('--fileids', default=None,
+	help='Specify fileids to load from corpus')
 
 tagger_group = parser.add_argument_group('Tagger Choices')
 tagger_group.add_argument('--default', default='-None-',
@@ -118,7 +124,27 @@ args = parser.parse_args()
 if args.corpus == 'timit':
 	tagged_corpus = LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader, '.+\.tags')
 else:
-	tagged_corpus = getattr(nltk.corpus, args.corpus)
+	tagged_corpus = getattr(nltk.corpus, args.corpus, None)
+
+if not tagged_corpus:
+	if not args.reader:
+		raise ValueError('you must specify a corpus reader')
+	
+	if not args.fileids:
+		raise ValueError('you must specify the corpus fileids')
+	
+	if os.path.isdir(args.corpus):
+		root = args.corpus
+	else:
+		try:
+			root = nltk.data.find(args.corpus)
+		except LookupError:
+			raise ValueError('cannot find corpus path %s' % args.corpus)
+	
+	reader_path, reader_name = args.reader.rsplit('.', 1)
+	mod = __import__(reader_path, globals(), locals(), [reader_name])
+	reader_cls = getattr(mod, reader_name)
+	tagged_corpus = reader_cls(root, args.fileids)
 
 if not tagged_corpus:
 	raise ValueError('%s is an unknown corpus')
@@ -128,11 +154,11 @@ if args.trace:
 # trigger loading so it has its true class
 tagged_corpus.fileids()
 # fileid is used for corpus naming, if it exists
-fileid = args.fileid
+fileids = args.fileids
 kwargs = {}
 
-if args.fileid:
-	kwargs['fileids'] = [args.fileid]
+#if args.fileids:
+#	kwargs['fileids'] = [args.fileids]
 # all other corpora are assumed to support simplify_tags kwarg
 if args.simplify_tags and args.corpus not in ['conll2000', 'switchboard', 'pl196x']:
 	kwargs['simplify_tags'] = True
@@ -141,20 +167,24 @@ elif args.simplify_tags and args.corpus in ['pl196x']:
 	raise ValueError('%s does not support simplify_tags' % args.corpus)
 
 if isinstance(tagged_corpus, SwitchboardCorpusReader):
-	if args.fileid:
-		raise ValueError('fileid cannot be used with switchboard')
+	if args.fileids:
+		raise ValueError('fileids cannot be used with switchboard')
 	
 	tagged_sents = list(itertools.chain(*[[list(s) for s in d if s] for d in tagged_corpus.tagged_discourses(**kwargs)]))
 elif isinstance(tagged_corpus, NPSChatCorpusReader):
 	tagged_sents = tagged_corpus.tagged_posts(**kwargs)
-elif isinstance(tagged_corpus, IndianCorpusReader):
-	if not kwargs.get('fileids'):
-		fileid = 'hindi.pos'
-		kwargs['fileids'] = [fileid]
+else:
+	if isinstance(tagged_corpus, IndianCorpusReader) and not fileids:
+		fileids = 'hindi.pos'
+	
+	if fileids and fileids in tagged_corpus.fileids():
+		kwargs['fileids'] = [fileids]
+	
+		if args.trace:
+			print 'using tagged sentences from %s' % fileids
 	
 	tagged_sents = tagged_corpus.tagged_sents(**kwargs)
-else:
-	tagged_sents = tagged_corpus.tagged_sents(**kwargs)
+
 # manual simplification is needed for these corpora
 if args.simplify_tags and args.corpus in ['conll2000', 'switchboard']:
 	tagged_sents = [[(word, simplify_wsj_tag(tag)) for (word, tag) in sent] for sent in tagged_sents]
@@ -304,10 +334,11 @@ if not args.no_pickle:
 	if args.filename:
 		fname = os.path.expanduser(args.filename)
 	else:
-		parts = [args.corpus]
+		# use the last part of the corpus name/path as the prefix
+		parts = [os.path.split(args.corpus.rstrip('/'))[-1]]
 		
-		if fileid:
-			parts.append(os.path.splitext(fileid)[0])
+		#if fileids:
+		#	parts.append(os.path.splitext(fileids)[0])
 		
 		if args.brill:
 			parts.append('brill')

@@ -50,9 +50,11 @@ Using a Trained Classifier
 --------------------------
 
 You can use a trained classifier by loading the pickle file using `nltk.data.load <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.data-module.html#load>`_::
+	>>> import nltk.data
 	>>> classifier = nltk.data.load("classifiers/NAME_OF_CLASSIFIER.pickle")
 
 Or if your classifier pickle file is not in a ``nltk_data`` subdirectory, you can load it with `pickle.load <http://docs.python.org/library/pickle.html#pickle.load>`_::
+	>>> import pickle
 	>>> classifier = pickle.load(open("/path/to/NAME_OF_CLASSIFIER.pickle"))
 
 Either method will return an object that supports the `ClassifierI interface <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.classify.api.ClassifierI-class.html>`_. 
@@ -107,9 +109,11 @@ Using a Trained Tagger
 ----------------------
 
 You can use a trained tagger by loading the pickle file using `nltk.data.load <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.data-module.html#load>`_::
+	>>> import nltk.data
 	>>> tagger = nltk.data.load("taggers/NAME_OF_TAGGER.pickle")
 
 Or if your tagger pickle file is not in a ``nltk_data`` subdirectory, you can load it with `pickle.load <http://docs.python.org/library/pickle.html#pickle.load>`_::
+	>>> import pickle
 	>>> tagger = pickle.load(open("/path/to/NAME_OF_TAGGER.pickle"))
 
 Either method will return an object that supports the `TaggerI interface <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.tag.api.TaggerI-class.html>`_.

@@ -312,7 +312,10 @@ else:
 
 if not args.no_eval:
 	if not args.no_accuracy:
-		print 'accuracy: %f' % accuracy(classifier, test_feats)
+		try:
+			print 'accuracy: %f' % accuracy(classifier, test_feats)
+		except ZeroDivisionError:
+			print 'accuracy: 0'
 	
 	if args.multi and args.binary and not args.no_masi_distance:
 		print 'average masi distance: %f' % (scoring.avg_masi_distance(classifier, test_feats))

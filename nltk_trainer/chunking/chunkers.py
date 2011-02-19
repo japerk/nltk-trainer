@@ -2,9 +2,13 @@ import itertools
 import nltk.chunk
 from nltk.tag import UnigramTagger, BigramTagger, ClassifierBasedTagger
 
-#################
-## tag chunker ##
-#################
+#####################
+## tree conversion ##
+#####################
+
+def chunk_trees2train_chunks(chunk_sents):
+	tag_sents = [nltk.chunk.tree2conlltags(sent) for sent in chunk_sents]
+	return [[((w,t),c) for (w,t,c) in sent] for sent in tag_sents]
 
 def conll_tag_chunks(chunk_sents):
 	'''Convert each chunked sentence to list of (tag, chunk_tag) tuples,
@@ -17,6 +21,10 @@ def conll_tag_chunks(chunk_sents):
 	'''
 	tagged_sents = [nltk.chunk.tree2conlltags(tree) for tree in chunk_sents]
 	return [[(t, c) for (w, t, c) in sent] for sent in tagged_sents]
+
+#################
+## tag chunker ##
+#################
 
 class TagChunker(nltk.chunk.ChunkParserI):
 	'''Chunks tagged tokens using Ngram Tagging.'''
@@ -80,11 +88,3 @@ class ClassifierChunker(nltk.chunk.ChunkParserI):
 		if not tagged_sent: return None
 		chunks = self.tagger.tag(tagged_sent)
 		return nltk.chunk.conlltags2tree([(w,t,c) for ((w,t),c) in chunks])
-
-#####################
-## tree conversion ##
-#####################
-
-def chunk_trees2train_chunks(chunk_sents):
-	tag_sents = [nltk.chunk.tree2conlltags(sent) for sent in chunk_sents]
-	return [[((w,t),c) for (w,t,c) in sent] for sent in tag_sents]

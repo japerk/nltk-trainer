@@ -14,12 +14,12 @@ parser = argparse.ArgumentParser(description='Train a NLTK Classifier',
 	formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('corpus',
-	help='''The name of a chunked corpus included with NLTK, such as treebank or
-conll2000, or the root path to a corpus directory,
-which can be either an absolute path or relative to a nltk_data directory.''')
+	help='''The name of a chunked corpus included with NLTK, such as treebank_chunk or
+conll2000, or the root path to a corpus directory, which can be either an
+absolute path or relative to a nltk_data directory.''')
 parser.add_argument('--filename',
 	help='''filename/path for where to store the pickled tagger.
-The default is {corpus}_{algorithm}.pickle in ~/nltk_data/taggers''')
+The default is {corpus}_{algorithm}.pickle in ~/nltk_data/chunkers''')
 parser.add_argument('--no-pickle', action='store_true', default=False,
 	help="Don't pickle and save the tagger")
 parser.add_argument('--trace', default=1, type=int,
@@ -34,22 +34,18 @@ corpus_group.add_argument('--fileids', default=None,
 corpus_group.add_argument('--fraction', default=1.0, type=float,
 	help='Fraction of corpus to use for training, defaults to %(default)f')
 
-tagger_group = parser.add_argument_group('Tagger Based Chunker')
-tagger_group.add_argument('--sequential', default='ub',
-	help='''Sequential Backoff Algorithm. This can be any combination of the following letters:
+chunker_group = parser.add_argument_group('Chunker Options')
+chunker_group.add_argument('--sequential', default='ub',
+	help='''Sequential Backoff Algorithm for a Tagger based Chunker.
+This can be any combination of the following letters:
 	u: UnigramTagger
 	b: BigramTagger
 	t: TrigramTagger
-The default is "%(default)s", but you can set this to the empty string
-to not train a sequential backoff tagger.''')
-
-classifier_group = parser.add_argument_group('Classifier Based Chunker')
-classifier_group.add_argument('--classifier', default=None,
+The default is "%(default)s". If you specify a classifier, this option will be ignored.''')
+chunker_group.add_argument('--classifier', default=None,
 	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
-	help='''ClassifierBasedPOSTagger algorithm to use, default is %(default)s.
+	help='''ClassifierChunker algorithm to use instead of a sequential Tagger based Chunker.
 Maxent uses the default Maxent training algorithm, either CG or iis.''')
-classifier_group.add_argument('--cutoff_prob', default=0, type=float,
-	help='Cutoff probability for classifier tagger to backoff to previous tagger')
 
 maxent_group = parser.add_argument_group('Maxent Classifier Chunker',
 	'These options only apply when a Maxent classifier is chosen.')
@@ -93,11 +89,14 @@ chunked_corpus.fileids()
 fileids = args.fileids
 kwargs = {}
 
+if not hasattr(chunked_corpus, 'chunked_sents'):
+	raise ValueError('%s does not have chunked sents' % args.corpus)
+
 if fileids and fileids in chunked_corpus.fileids():
 	kwargs['fileids'] = [fileids]
 
 	if args.trace:
-		print 'using tagged sentences from %s' % fileids
+		print 'using chunked sentences from %s' % fileids
 
 chunk_trees = chunked_corpus.chunked_sents(**kwargs)
 
@@ -127,7 +126,7 @@ sequential_classes = {
 	't': nltk.tag.TrigramTagger
 }
 
-if args.sequential:
+if args.sequential and not args.classifier:
 	tagger_classes = []
 	
 	for c in args.sequential:
@@ -138,6 +137,45 @@ if args.sequential:
 	
 	chunker = chunkers.TagChunker(train_chunks, tagger_classes)
 
+##############################
+## classifier based chunker ##
+##############################
+
+classifier_train_kwargs = {}
+
+if args.classifier == 'DecisionTree':
+	classifier_train = DecisionTreeClassifier.train
+	classifier_train_kwargs['binary'] = False
+	classifier_train_kwargs['entropy_cutoff'] = args.entropy_cutoff
+	classifier_train_kwargs['depth_cutoff'] = args.depth_cutoff
+	classifier_train_kwargs['support_cutoff'] = args.support_cutoff
+	classifier_train_kwargs['verbose'] = args.trace
+elif args.classifier == 'NaiveBayes':
+	classifier_train = NaiveBayesClassifier.train
+elif args.classifier:
+	if args.classifier != 'Maxent':
+		classifier_train_kwargs['algorithm'] = args.classifier
+	
+	classifier_train = MaxentClassifier.train
+	classifier_train_kwargs['max_iter'] = args.max_iter
+	classifier_train_kwargs['min_ll'] = args.min_ll
+	classifier_train_kwargs['min_lldelta'] = args.min_lldelta
+	classifier_train_kwargs['trace'] = args.trace
+
+if args.classifier:
+	def classifier_builder(train_feats):
+		return classifier_train(train_feats, **classifier_train_kwargs)
+	
+	kwargs = {
+		'verbose': args.trace,
+		'classifier_builder': classifier_builder
+	}
+	
+	if args.trace:
+		print 'training a %s ClassifierChunker' % args.classifier
+	
+	chunker = chunkers.ClassifierChunker(train_chunks, **kwargs)
+
 ################
 ## evaluation ##
 ################
@@ -145,4 +183,3 @@ if args.sequential:
 if not args.no_eval:
 	print 'evaluating %s' % chunker
 	print chunker.evaluate(test_chunks)
-	# TODO: more metrics

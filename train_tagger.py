@@ -164,14 +164,11 @@ else:
 if args.simplify_tags and args.corpus in ['conll2000', 'switchboard']:
 	tagged_sents = [[(word, simplify_wsj_tag(tag)) for (word, tag) in sent] for sent in tagged_sents]
 
-# TODO: support generic tagged corpus readers: TaggedCorpusReader,
-# BracketParseCorpusReader, ConllChunkCorpusReader
-
 ##################
 ## tagged sents ##
 ##################
 
-# can't trust corpus to provide valid sents (indian)
+# can't trust corpus to provide valid list of sents (indian)
 tagged_sents = [sent for sent in tagged_sents if sent]
 nsents = len(tagged_sents)
 

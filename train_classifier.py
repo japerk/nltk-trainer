@@ -1,5 +1,4 @@
-import argparse, collections, itertools, math, os, os.path, re, string
-import cPickle as pickle
+import argparse, collections, itertools, math, os.path, re, string
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
 from nltk.classify.util import accuracy
 from nltk.corpus import stopwords
@@ -8,6 +7,7 @@ from nltk.corpus.util import LazyCorpusLoader
 from nltk.metrics import BigramAssocMeasures, f_measure, masi_distance, precision, recall
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk.util import bigrams
+from nltk_trainer import dump_object
 from nltk_trainer.classification import corpus, scoring
 from nltk_trainer.classification.featx import bag_of_words, bag_of_words_in_set, train_test_feats
 from nltk_trainer.classification.multi import MultiBinaryClassifier
@@ -354,17 +354,4 @@ if not args.no_pickle:
 		name = '%s_%s.pickle' % (args.corpus, args.algorithm)
 		fname = os.path.join(os.path.expanduser('~/nltk_data/classifiers'), name)
 	
-	dirname = os.path.dirname(fname)
-	
-	if not os.path.exists(dirname):
-		if args.trace:
-			print 'creating directory %s' % dirname
-		
-		os.mkdir(dirname)
-	
-	if args.trace:
-		print 'dumping classifier to %s' % fname
-	
-	f = open(fname, 'wb')
-	pickle.dump(classifier, f)
-	f.close()
+	dump_object(classifier, fname, trace=args.trace)

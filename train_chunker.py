@@ -1,7 +1,7 @@
 import argparse, math, itertools, os.path
-import cPickle as pickle
 import nltk.tag, nltk.chunk.util
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
+from nltk_trainer import dump_object
 from nltk_trainer.chunking import chunkers
 # TODO: readers is shared with train_tagger, so move it elsewhere / separate
 from nltk_trainer.tagging import readers
@@ -181,5 +181,26 @@ if args.classifier:
 ################
 
 if not args.no_eval:
-	print 'evaluating %s' % chunker
+	print 'evaluating %s' % chunker.__class__.__name__
 	print chunker.evaluate(test_chunks)
+
+##############
+## pickling ##
+##############
+
+if not args.no_pickle:
+	if args.filename:
+		fname = os.path.expanduser(args.filename)
+	else:
+		# use the last part of the corpus name/path as the prefix
+		parts = [os.path.split(args.corpus.rstrip('/'))[-1]]
+		
+		if args.classifier:
+			parts.append(args.classifier)
+		elif args.sequential:
+			parts.append(args.sequential)
+		
+		name = '%s.pickle' % '_'.join(parts)
+		fname = os.path.join(os.path.expanduser('~/nltk_data/chunkers'), name)
+	
+	dump_object(chunker, fname, trace=args.trace)

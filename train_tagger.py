@@ -1,5 +1,4 @@
 import argparse, math, itertools, os.path
-import cPickle as pickle
 import nltk.corpus
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
 # special case corpus readers
@@ -7,6 +6,7 @@ from nltk.corpus.reader import SwitchboardCorpusReader, NPSChatCorpusReader, Ind
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag import ClassifierBasedPOSTagger
 from nltk.tag.simplify import simplify_wsj_tag
+from nltk_trainer import dump_object
 from nltk_trainer.tagging import readers
 from nltk_trainer.tagging.training import train_brill_tagger
 from nltk_trainer.tagging.taggers import PhoneticClassifierBasedPOSTagger
@@ -321,17 +321,4 @@ if not args.no_pickle:
 		name = '%s.pickle' % '_'.join(parts)
 		fname = os.path.join(os.path.expanduser('~/nltk_data/taggers'), name)
 	
-	dirname = os.path.dirname(fname)
-	
-	if not os.path.exists(dirname):
-		if args.trace:
-			print 'creating directory %s' % dirname
-		
-		os.mkdir(dirname)
-	
-	if args.trace:
-		print 'dumping tagger to %s' % fname
-	
-	f = open(fname, 'wb')
-	pickle.dump(tagger, f)
-	f.close()
+	dump_object(tagger, fname, trace=args.trace)

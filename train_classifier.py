@@ -1,4 +1,5 @@
 import argparse, collections, itertools, math, os.path, re, string
+import nltk_trainer.classification.args
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
 from nltk.classify.util import accuracy
 from nltk.corpus import stopwords
@@ -24,9 +25,9 @@ parser.add_argument('--filename', help='''filename/path for where to store the
 	~/nltk_data/classifiers''')
 parser.add_argument('--no-pickle', action='store_true', default=False,
 	help="don't pickle and save the classifier")
-parser.add_argument('--algorithm', default='NaiveBayes',
-	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
-	help='''Training algorithm to use, defaults to NaiveBayes. Maxent uses the
+parser.add_argument('--classifier', '--algorithm', default='NaiveBayes',
+	choices=nltk_trainer.classification.args.classifier_choices,
+	help='''Classifier algorithm to use, defaults to %(default)s. Maxent uses the
 	default Maxent training algorithm, either CG or iis.''')
 parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to 1. 0 is no trace output.')
@@ -108,23 +109,8 @@ eval_group.add_argument('--no-fmeasure', action='store_true', default=False,
 eval_group.add_argument('--no-masi-distance', action='store_true', default=False,
 	help="don't evaluate masi distance (only applies to a multi binary classifier)")
 
-maxent_group = parser.add_argument_group('Maxent Classifier',
-	'These options only apply when a Maxent algorithm is chosen.')
-maxent_group.add_argument('--max_iter', default=10, type=int,
-	help='maximum number of training iterations, defaults to 10')
-maxent_group.add_argument('--min_ll', default=0, type=float,
-	help='stop classification when average log-likelihood is less than this, default is 0')
-maxent_group.add_argument('--min_lldelta', default=0.1, type=float,
-	help='stop classification when the change in average log-likelihood is less than this, default is 0.1')
-
-decisiontree_group = parser.add_argument_group('Decision Tree Classifier',
-	'These options only apply when the DecisionTree algorithm is chosen')
-decisiontree_group.add_argument('--entropy_cutoff', default=0.05, type=float,
-	help='default is 0.05')
-decisiontree_group.add_argument('--depth_cutoff', default=100, type=int,
-	help='default is 100')
-decisiontree_group.add_argument('--support_cutoff', default=10, type=int,
-	help='default is 10')
+nltk_trainer.classification.args.add_maxent_args(parser)
+nltk_trainer.classification.args.add_decision_tree_args(parser)
 
 args = parser.parse_args()
 
@@ -274,37 +260,18 @@ else:
 ## training ##
 ##############
 
-train_kwargs = {}
-
-if args.algorithm == 'DecisionTree':
-	trainf = DecisionTreeClassifier.train
-	train_kwargs['binary'] = not args.multi
-	train_kwargs['entropy_cutoff'] = args.entropy_cutoff
-	train_kwargs['depth_cutoff'] = args.depth_cutoff
-	train_kwargs['support_cutoff'] = args.support_cutoff
-	train_kwargs['verbose'] = args.trace
-elif args.algorithm != 'NaiveBayes':
-	if args.algorithm != 'Maxent':
-		train_kwargs['algorithm'] = args.algorithm
-	
-	trainf = MaxentClassifier.train
-	train_kwargs['max_iter'] = args.max_iter
-	train_kwargs['min_ll'] = args.min_ll
-	train_kwargs['min_lldelta'] = args.min_lldelta
-	train_kwargs['trace'] = args.trace
-else:
-	trainf = NaiveBayesClassifier.train
+trainf = nltk_trainer.classification.args.make_classifier_builder(args)
 
 if args.multi and args.binary:
 	if args.trace:
-		print 'training a multi-binary %s classifier' % args.algorithm
+		print 'training a multi-binary %s classifier' % args.classifier
 	
-	classifier = MultiBinaryClassifier.train(labels, train_feats, trainf, **train_kwargs)
+	classifier = MultiBinaryClassifier.train(labels, train_feats, trainf)
 else:
 	if args.trace:
-		print 'training a %s classifier' % args.algorithm
+		print 'training a %s classifier' % args.classifier
 	
-	classifier = trainf(train_feats, **train_kwargs)
+	classifier = trainf(train_feats)
 
 ################
 ## evaluation ##
@@ -339,7 +306,7 @@ if not args.no_eval:
 			if not args.no_fmeasure:
 				print '%s f-measure: %f' % (label, f_measure(ref, test) or 0)
 
-if args.show_most_informative and args.algorithm != 'DecisionTree' and not (args.multi and args.binary):
+if args.show_most_informative and args.classifier != 'DecisionTree' and not (args.multi and args.binary):
 	print '%d most informative features' % args.show_most_informative
 	classifier.show_most_informative_features(args.show_most_informative)
 
@@ -351,7 +318,7 @@ if not args.no_pickle:
 	if args.filename:
 		fname = os.path.expanduser(args.filename)
 	else:
-		name = '%s_%s.pickle' % (args.corpus, args.algorithm)
+		name = '%s_%s.pickle' % (args.corpus, args.classifier)
 		fname = os.path.join(os.path.expanduser('~/nltk_data/classifiers'), name)
 	
 	dump_object(classifier, fname, trace=args.trace)

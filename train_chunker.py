@@ -1,6 +1,6 @@
 import argparse, math, itertools, os.path
 import nltk.tag, nltk.chunk.util
-from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
+import nltk_trainer.classification.args
 from nltk_trainer import dump_object
 from nltk_trainer.chunking import chunkers
 # TODO: readers is shared with train_tagger, so move it elsewhere / separate
@@ -43,28 +43,12 @@ This can be any combination of the following letters:
 	t: TrigramTagger
 The default is "%(default)s". If you specify a classifier, this option will be ignored.''')
 chunker_group.add_argument('--classifier', default=None,
-	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
+	choices=nltk_trainer.classification.args.classifier_choices,
 	help='''ClassifierChunker algorithm to use instead of a sequential Tagger based Chunker.
 Maxent uses the default Maxent training algorithm, either CG or iis.''')
 
-maxent_group = parser.add_argument_group('Maxent Classifier Chunker',
-	'These options only apply when a Maxent classifier is chosen.')
-maxent_group.add_argument('--max_iter', default=10, type=int,
-	help='maximum number of training iterations, defaults to %(default)d')
-maxent_group.add_argument('--min_ll', default=0, type=float,
-	help='stop classification when average log-likelihood is less than this, default is %(default)d')
-maxent_group.add_argument('--min_lldelta', default=0.1, type=float,
-	help='''stop classification when the change in average log-likelihood is less than this.
-default is %(default)f''')
-
-decisiontree_group = parser.add_argument_group('Decision Tree Classifier Chunker',
-	'These options only apply when the DecisionTree classifier is chosen')
-decisiontree_group.add_argument('--entropy_cutoff', default=0.05, type=float,
-	help='default is 0.05')
-decisiontree_group.add_argument('--depth_cutoff', default=100, type=int,
-	help='default is 100')
-decisiontree_group.add_argument('--support_cutoff', default=10, type=int,
-	help='default is 10')
+nltk_trainer.classification.args.add_maxent_args(parser)
+nltk_trainer.classification.args.add_decision_tree_args(parser)
 
 eval_group = parser.add_argument_group('Chunker Evaluation',
 	'Evaluation metrics for chunkers')
@@ -141,40 +125,12 @@ if args.sequential and not args.classifier:
 ## classifier based chunker ##
 ##############################
 
-classifier_train_kwargs = {}
-
-if args.classifier == 'DecisionTree':
-	classifier_train = DecisionTreeClassifier.train
-	classifier_train_kwargs['binary'] = False
-	classifier_train_kwargs['entropy_cutoff'] = args.entropy_cutoff
-	classifier_train_kwargs['depth_cutoff'] = args.depth_cutoff
-	classifier_train_kwargs['support_cutoff'] = args.support_cutoff
-	classifier_train_kwargs['verbose'] = args.trace
-elif args.classifier == 'NaiveBayes':
-	classifier_train = NaiveBayesClassifier.train
-elif args.classifier:
-	if args.classifier != 'Maxent':
-		classifier_train_kwargs['algorithm'] = args.classifier
-	
-	classifier_train = MaxentClassifier.train
-	classifier_train_kwargs['max_iter'] = args.max_iter
-	classifier_train_kwargs['min_ll'] = args.min_ll
-	classifier_train_kwargs['min_lldelta'] = args.min_lldelta
-	classifier_train_kwargs['trace'] = args.trace
-
 if args.classifier:
-	def classifier_builder(train_feats):
-		return classifier_train(train_feats, **classifier_train_kwargs)
-	
-	kwargs = {
-		'verbose': args.trace,
-		'classifier_builder': classifier_builder
-	}
-	
 	if args.trace:
 		print 'training a %s ClassifierChunker' % args.classifier
 	
-	chunker = chunkers.ClassifierChunker(train_chunks, **kwargs)
+	chunker = chunkers.ClassifierChunker(train_chunks, verbose=args.trace,
+		classifier_builder=nltk_trainer.classification.args.make_classifier_builder(args))
 
 ################
 ## evaluation ##

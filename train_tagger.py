@@ -1,5 +1,6 @@
 import argparse, math, itertools, os.path
 import nltk.corpus
+import nltk_trainer.classification.args
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
 # special case corpus readers
 from nltk.corpus.reader import SwitchboardCorpusReader, NPSChatCorpusReader, IndianCorpusReader
@@ -72,7 +73,7 @@ brill_group.add_argument('--min_score', type=int, default=2)
 
 classifier_group = parser.add_argument_group('Classifier Based Tagger')
 classifier_group.add_argument('--classifier', default=None,
-	choices=['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS,
+	choices=nltk_trainer.classification.args.classifier_choices,
 	help='''ClassifierBasedPOSTagger algorithm to use, default is %(default)s.
 Maxent uses the default Maxent training algorithm, either CG or iis.''')
 classifier_group.add_argument('--cutoff_prob', default=0, type=float,
@@ -90,24 +91,8 @@ phonetic_group.add_argument('--nysiis', action='store_true',
 phonetic_group.add_argument('--caverphone', action='store_true',
 	default=False, help='Use caverphone feature')
 
-maxent_group = parser.add_argument_group('Maxent Classifier Tagger',
-	'These options only apply when a Maxent classifier is chosen.')
-maxent_group.add_argument('--max_iter', default=10, type=int,
-	help='maximum number of training iterations, defaults to %(default)d')
-maxent_group.add_argument('--min_ll', default=0, type=float,
-	help='stop classification when average log-likelihood is less than this, default is %(default)d')
-maxent_group.add_argument('--min_lldelta', default=0.1, type=float,
-	help='''stop classification when the change in average log-likelihood is less than this.
-default is %(default)f''')
-
-decisiontree_group = parser.add_argument_group('Decision Tree Classifier Tagger',
-	'These options only apply when the DecisionTree classifier is chosen')
-decisiontree_group.add_argument('--entropy_cutoff', default=0.05, type=float,
-	help='default is 0.05')
-decisiontree_group.add_argument('--depth_cutoff', default=100, type=int,
-	help='default is 100')
-decisiontree_group.add_argument('--support_cutoff', default=10, type=int,
-	help='default is 10')
+nltk_trainer.classification.args.add_maxent_args(parser)
+nltk_trainer.classification.args.add_decision_tree_args(parser)
 
 eval_group = parser.add_argument_group('Tagger Evaluation',
 	'Evaluation metrics for part-of-speech taggers')
@@ -234,37 +219,13 @@ if args.sequential:
 ## classifier tagger ##
 #######################
 
-classifier_train_kwargs = {}
-
-if args.classifier == 'DecisionTree':
-	classifier_train = DecisionTreeClassifier.train
-	classifier_train_kwargs['binary'] = False
-	classifier_train_kwargs['entropy_cutoff'] = args.entropy_cutoff
-	classifier_train_kwargs['depth_cutoff'] = args.depth_cutoff
-	classifier_train_kwargs['support_cutoff'] = args.support_cutoff
-	classifier_train_kwargs['verbose'] = args.trace
-elif args.classifier == 'NaiveBayes':
-	classifier_train = NaiveBayesClassifier.train
-elif args.classifier:
-	if args.classifier != 'Maxent':
-		classifier_train_kwargs['algorithm'] = args.classifier
-	
-	classifier_train = MaxentClassifier.train
-	classifier_train_kwargs['max_iter'] = args.max_iter
-	classifier_train_kwargs['min_ll'] = args.min_ll
-	classifier_train_kwargs['min_lldelta'] = args.min_lldelta
-	classifier_train_kwargs['trace'] = args.trace
-
 if args.classifier:
-	def classifier_builder(train_feats):
-		return classifier_train(train_feats, **classifier_train_kwargs)
-	
 	kwargs = {
 		'train': train_sents,
 		'verbose': args.trace,
 		'backoff': tagger,
 		'cutoff_prob': args.cutoff_prob,
-		'classifier_builder': classifier_builder
+		'classifier_builder': nltk_trainer.classification.args.make_classifier_builder(args)
 	}
 	
 	phonetic_keys = ['metaphone', 'double_metaphone', 'soundex', 'nysiis', 'caverphone']
@@ -295,7 +256,7 @@ if args.brill:
 ################
 
 if not args.no_eval:
-	print 'evaluating %s' % tagger
+	print 'evaluating %s' % tagger.__class__.__name__
 	print 'accuracy: %f' % tagger.evaluate(test_sents)
 
 ##############

@@ -1,10 +1,8 @@
 import argparse, math, itertools, os.path
 import nltk.tag, nltk.chunk.util
 import nltk_trainer.classification.args
-from nltk_trainer import dump_object
+from nltk_trainer import dump_object, load_corpus_reader
 from nltk_trainer.chunking import chunkers
-# TODO: readers is shared with train_tagger, so move it elsewhere / separate
-from nltk_trainer.tagging import readers
 
 ########################################
 ## command options & argument parsing ##
@@ -61,7 +59,7 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-chunked_corpus = readers.load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
+chunked_corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 
 if not chunked_corpus:
 	raise ValueError('%s is an unknown corpus')

@@ -7,7 +7,7 @@ from nltk.corpus.reader import SwitchboardCorpusReader, NPSChatCorpusReader, Ind
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag import ClassifierBasedPOSTagger
 from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer import dump_object
+from nltk_trainer import dump_object, load_corpus_reader
 from nltk_trainer.tagging import readers
 from nltk_trainer.tagging.training import train_brill_tagger
 from nltk_trainer.tagging.taggers import PhoneticClassifierBasedPOSTagger
@@ -106,7 +106,7 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-tagged_corpus = readers.load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
+tagged_corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 
 if not tagged_corpus:
 	raise ValueError('%s is an unknown corpus')

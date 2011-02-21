@@ -3,7 +3,7 @@ import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
 from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer.tagging import readers
+from nltk_trainer import load_corpus_reader
 
 # support all corpus readers that have the sents() method
 reader_classes = [cls for cls in dir(nltk.corpus.reader) if hasattr(getattr(nltk.corpus.reader, cls), 'sents')]
@@ -42,7 +42,7 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-corpus = readers.load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
+corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 
 #if args.corpus == 'timit':
 #	corpus = LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader, '.+\.tags')

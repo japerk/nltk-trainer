@@ -3,7 +3,7 @@ import nltk.corpus
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
 from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer.tagging import readers
+from nltk_trainer import load_corpus_reader
 
 ########################################
 ## command options & argument parsing ##
@@ -40,7 +40,7 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-tagged_corpus = readers.load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
+tagged_corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 
 if not tagged_corpus:
 	raise ValueError('%s is an unknown corpus')

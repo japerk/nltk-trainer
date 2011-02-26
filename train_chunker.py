@@ -162,7 +162,7 @@ if args.sequential and not args.classifier:
 		tagger_classes.append(sequential_classes[c])
 	
 	if args.trace:
-		print 'training a %s TagChunker' % args.sequential
+		print 'training %s TagChunker' % args.sequential
 	
 	chunker = chunkers.TagChunker(train_chunks, tagger_classes)
 
@@ -172,7 +172,7 @@ if args.sequential and not args.classifier:
 
 if args.classifier:
 	if args.trace:
-		print 'training a %s ClassifierChunker' % args.classifier
+		print 'training %s ClassifierChunker' % args.classifier
 	# TODO: feature extraction options
 	chunker = chunkers.ClassifierChunker(train_chunks, verbose=args.trace,
 		classifier_builder=nltk_trainer.classification.args.make_classifier_builder(args))

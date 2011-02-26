@@ -1,8 +1,9 @@
 import argparse, math, itertools, os.path
-import nltk.tag, nltk.chunk.util
+import nltk.tag, nltk.chunk, nltk.chunk.util
 import nltk_trainer.classification.args
+from nltk.corpus.reader import IEERCorpusReader
 from nltk_trainer import dump_object, load_corpus_reader
-from nltk_trainer.chunking import chunkers
+from nltk_trainer.chunking import chunkers, transforms
 
 ########################################
 ## command options & argument parsing ##
@@ -31,6 +32,12 @@ corpus_group.add_argument('--fileids', default=None,
 	help='Specify fileids to load from corpus')
 corpus_group.add_argument('--fraction', default=1.0, type=float,
 	help='Fraction of corpus to use for training, defaults to %(default)f')
+corpus_group.add_argument('--flatten-deep-tree', action='store_true', default=False,
+	help='''Flatten deep trees from parsed_sents() instead of chunked_sents().
+Cannot be combined with --shallow-tree.''')
+corpus_group.add_argument('--shallow-tree', action='store_true', default=False,
+	help='''Use shallow trees from parsed_sents() instead of chunked_sents().
+Cannot be combined with --flatten-deep-tree.''')
 
 chunker_group = parser.add_argument_group('Chunker Options')
 chunker_group.add_argument('--sequential', default='ub',
@@ -70,17 +77,54 @@ if args.trace:
 chunked_corpus.fileids()
 fileids = args.fileids
 kwargs = {}
-
-if not hasattr(chunked_corpus, 'chunked_sents'):
-	raise ValueError('%s does not have chunked sents' % args.corpus)
-
+	
 if fileids and fileids in chunked_corpus.fileids():
 	kwargs['fileids'] = [fileids]
 
 	if args.trace:
 		print 'using chunked sentences from %s' % fileids
 
-chunk_trees = chunked_corpus.chunked_sents(**kwargs)
+if isinstance(chunked_corpus, IEERCorpusReader):
+	chunk_trees = []
+	
+	if args.trace:
+		print 'converting ieer parsed docs to chunked sentences'
+	
+	for doc in chunked_corpus.parsed_docs(**kwargs):
+		tagged = chunkers.ieertree2conlltags(doc.text)
+		chunk_trees.append(nltk.chunk.conlltags2tree(tagged))
+elif args.flatten_deep_tree and args.shallow_tree:
+	raise ValueError('only one of --flatten-deep-tree or --shallow-tree can be used')
+elif (args.flatten_deep_tree or args.shallow_tree) and not hasattr(chunked_corpus, 'parsed_sents'):
+	raise ValueError('%s does not have parsed sents' % args.corpus)
+elif args.flatten_deep_tree:
+	if args.trace:
+		print 'flattening deep trees from %s' % args.corpus
+	
+	chunk_trees = []
+	
+	for i, tree in enumerate(chunked_corpus.parsed_sents(**kwargs)):
+		try:
+			chunk_trees.append(transforms.flatten_deeptree(tree))
+		except AttributeError as exc:
+			if args.trace > 1:
+				print 'skipping bad tree %d: %s' % (i, exc)
+elif args.shallow_tree:
+	if args.trace:
+		print 'creating shallow trees from %s' % args.corpus
+	
+	chunk_trees = []
+	
+	for i, tree in enumerate(chunked_corpus.parsed_sents(**kwargs)):
+		try:
+			chunk_trees.append(transforms.shallow_tree(tree))
+		except AttributeError as exc:
+			if args.trace > 1:
+				print 'skipping bad tree %d: %s' % (i, exc)
+elif not hasattr(chunked_corpus, 'chunked_sents'):
+	raise ValueError('%s does not have chunked sents' % args.corpus)
+else:
+	chunk_trees = chunked_corpus.chunked_sents(**kwargs)
 
 ##################
 ## train chunks ##
@@ -117,6 +161,9 @@ if args.sequential and not args.classifier:
 		
 		tagger_classes.append(sequential_classes[c])
 	
+	if args.trace:
+		print 'training a %s TagChunker' % args.sequential
+	
 	chunker = chunkers.TagChunker(train_chunks, tagger_classes)
 
 ##############################
@@ -126,7 +173,7 @@ if args.sequential and not args.classifier:
 if args.classifier:
 	if args.trace:
 		print 'training a %s ClassifierChunker' % args.classifier
-	
+	# TODO: feature extraction options
 	chunker = chunkers.ClassifierChunker(train_chunks, verbose=args.trace,
 		classifier_builder=nltk_trainer.classification.args.make_classifier_builder(args))
 
@@ -135,7 +182,9 @@ if args.classifier:
 ################
 
 if not args.no_eval:
-	print 'evaluating %s' % chunker.__class__.__name__
+	if args.trace:
+		print 'evaluating %s' % chunker.__class__.__name__
+	
 	print chunker.evaluate(test_chunks)
 
 ##############

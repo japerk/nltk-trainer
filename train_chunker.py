@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import argparse, math, itertools, os.path
 import nltk.tag, nltk.chunk, nltk.chunk.util
 import nltk_trainer.classification.args

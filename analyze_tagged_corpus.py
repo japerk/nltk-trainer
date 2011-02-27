@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import argparse
 import nltk.corpus
 from nltk.corpus.util import LazyCorpusLoader

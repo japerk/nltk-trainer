@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import argparse, collections, itertools, math, os.path, re, string
 import nltk_trainer.classification.args
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier

@@ -7,10 +7,10 @@ setup(
 	author_email='japerk@gmail.com',
 	url='https://github.com/japerk/nltk-trainer',
 	packages=['nltk_trainer'],
-	scripts=[
+	scripts=(
 		'analyze_tagged_corpus.py', 'analyze_tagger_coverage.py',
-		'train_chunker.py', 'train_classifier.py', 'train_tagger.py'
-	]
+		'train_chunker.py', 'train_classifier.py', 'train_tagger.py',
+	),
 	license='LICENSE',
 	description='Train NLTK objects with 0 code',
 	long_description=open('README.rst').read(),

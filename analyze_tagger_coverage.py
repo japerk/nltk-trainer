@@ -45,17 +45,6 @@ args = parser.parse_args()
 
 corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 
-#if args.corpus == 'timit':
-#	corpus = LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader, '.+\.tags')
-#elif hasattr(nltk.corpus, args.corpus):
-#	corpus = getattr(nltk.corpus, args.corpus)
-#elif hasattr(nltk.corpus.reader, args.reader):
-#	reader_cls = getattr(nltk.corpus.reader, args.reader)
-#	corpus = reader_cls(args.corpus, '.+')
-# TODO: try to import args.reader as an import path to a custom corpus reader
-#else:
-#	raise ValueError('do not know how to load corpus %s with reader %s' % (args.corpus, args.reader))
-
 # TODO: support corpora with alternatives to tagged_sents that work just as well
 if args.metrics and not hasattr(corpus, 'tagged_sents'):
 	raise ValueError('%s does not support metrics' % args.corpus)

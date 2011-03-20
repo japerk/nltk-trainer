@@ -84,10 +84,10 @@ else:
 	raise ValueError('%s is not a valid sort option' % args.sort)
 
 # simple reSt table format
-print '  Tag  \t  Count  '
-print '=======\t========='
+print '  Tag      Count  '
+print '=======  ========='
 
 for tag, count in sorted(tag_counts.items(), key=sort_key, reverse=args.reverse):
-	print '%s\t%s' % (tag, count)
+	print '  '.join([tag.ljust(7), str(count).rjust(9)])
 
-print '=======\t========='
+print '=======  ========='

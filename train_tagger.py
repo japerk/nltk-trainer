@@ -57,7 +57,7 @@ sequential_group.add_argument('--sequential', default='aubt',
 	t: TrigramTagger
 The default is "%(default)s", but you can set this to the empty string
 to not train a sequential backoff tagger.''')
-sequential_group.add_argument('--affix', action='append', type=int,
+sequential_group.add_argument('-a', '--affix', action='append', type=int,
 	help='''Add affixes to use for one or more AffixTaggers.
 Negative numbers are suffixes, positive numbers are prefixes.
 You can use this option multiple times to create multiple AffixTaggers with different affixes.

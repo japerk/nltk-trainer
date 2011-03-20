@@ -3,7 +3,7 @@ from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesCl
 classifier_choices = ['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS
 
 def add_maxent_args(parser):
-	maxent_group = parser.add_argument_group('Maxent Classifier Chunker',
+	maxent_group = parser.add_argument_group('Maxent Classifier',
 		'These options only apply when a Maxent classifier is chosen.')
 	maxent_group.add_argument('--max_iter', default=10, type=int,
 		help='maximum number of training iterations, defaults to %(default)d')
@@ -14,7 +14,7 @@ def add_maxent_args(parser):
 	default is %(default)f''')
 
 def add_decision_tree_args(parser):
-	decisiontree_group = parser.add_argument_group('Decision Tree Classifier Chunker',
+	decisiontree_group = parser.add_argument_group('Decision Tree Classifier',
 		'These options only apply when the DecisionTree classifier is chosen')
 	decisiontree_group.add_argument('--entropy_cutoff', default=0.05, type=float,
 		help='default is 0.05')

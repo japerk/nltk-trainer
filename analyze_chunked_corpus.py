@@ -3,7 +3,7 @@ import argparse
 import nltk.corpus
 from nltk.tree import Tree
 from nltk.corpus.util import LazyCorpusLoader
-from nltk.probability import FreqDist
+from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer import load_corpus_reader
 
@@ -28,8 +28,8 @@ nltk.corpus.reader.chunked.ChunkedCorpusReader''')
 corpus_group.add_argument('--fileids', default=None,
 	help='Specify fileids to load from corpus')
 
-sort_group = parser.add_argument_group('IOB Count Sorting Options')
-sort_group.add_argument('--sort', default='iob', choices=['iob', 'count'],
+sort_group = parser.add_argument_group('Tag Count Sorting Options')
+sort_group.add_argument('--sort', default='tag', choices=['tag', 'count'],
 	help='Sort key, defaults to %(default)s')
 sort_group.add_argument('--reverse', action='store_true', default=False,
 	help='Sort in revere order')
@@ -53,38 +53,56 @@ if args.trace:
 ##############
 
 wc = 0
+tag_counts = FreqDist()
 iob_counts = FreqDist()
+tag_iob_counts = ConditionalFreqDist()
 word_set = set()
 
 for obj in chunked_corpus.chunked_words():
 	if isinstance(obj, Tree):
 		iob_counts.inc(obj.node)
-		word_tags = obj.leaves()
-	else: # isinstance(obj, tuple)
-		word_tags = [obj]
-	
-	for word, tag in word_tags:
+		
+		for word, tag in obj.leaves():
+			wc += 1
+			word_set.add(word)
+			tag_counts.inc(tag)
+			tag_iob_counts[tag].inc(obj.node)
+	else:
+		word, tag = obj
 		wc += 1
 		word_set.add(word)
+		tag_counts.inc(tag)
 
 ############
 ## output ##
 ############
 
-print '%d total words\n%d unique words\n%d iob tags\n' % (wc, len(word_set), len(iob_counts))
+print '%d total words' % wc
+print '%d unique words' % len(word_set)
+print '%d tags' % len(tag_counts)
+print '%d IOBs\n' % len(iob_counts)
 
-if args.sort == 'iob':
+if args.sort == 'tag':
 	sort_key = lambda (t, c): t
 elif args.sort == 'count':
 	sort_key = lambda (t, c): c
 else:
 	raise ValueError('%s is not a valid sort option' % args.sort)
 
-# simple reSt table format
-print '  IOB      Count  '
-print '=======  ========='
+line1 = '  Tag      Count  '
+line2 = '=======  ========='
 
-for iob, count in sorted(iob_counts.items(), key=sort_key, reverse=args.reverse):
-	print '  '.join([iob.ljust(7), str(count).rjust(9)])
+iobs = sorted(iob_counts.keys())
 
-print '=======  ========='
+for iob in iobs:
+	line1 += '    %s  ' % iob
+	line2 += '  ==%s==' % ('=' * len(iob))
+
+print line1
+print line2
+
+for tag, count in sorted(tag_counts.items(), key=sort_key, reverse=args.reverse):
+	iob_counts = [str(tag_iob_counts[tag][iob]).rjust(4+len(iob)) for iob in iobs]
+	print '  '.join([tag.ljust(7), str(count).rjust(9)] + iob_counts)
+
+print line2

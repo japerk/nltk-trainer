@@ -6,9 +6,6 @@ from nltk.probability import FreqDist
 from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer import load_corpus_reader
 
-# support all corpus readers that have the sents() method
-reader_classes = [cls for cls in dir(nltk.corpus.reader) if hasattr(getattr(nltk.corpus.reader, cls), 'sents')]
-
 ########################################
 ## command options & argument parsing ##
 ########################################

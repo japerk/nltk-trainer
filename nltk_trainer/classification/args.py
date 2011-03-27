@@ -2,6 +2,12 @@ from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesCl
 
 classifier_choices = ['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS
 
+try:
+	from .sci import ScikitsClassifier
+	classifier_choices.append('Scikits')
+except ImportError:
+	pass
+
 def add_maxent_args(parser):
 	maxent_group = parser.add_argument_group('Maxent Classifier',
 		'These options only apply when a Maxent classifier is chosen.')
@@ -38,6 +44,8 @@ def make_classifier_builder(args):
 		classifier_train_kwargs['verbose'] = args.trace
 	elif args.classifier == 'NaiveBayes':
 		classifier_train = NaiveBayesClassifier.train
+	elif args.classifier == 'Scikits':
+		classifier_train = ScikitsClassifier.train
 	else:
 		if args.classifier != 'Maxent':
 			classifier_train_kwargs['algorithm'] = args.classifier

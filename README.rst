@@ -78,6 +78,8 @@ Training Part of Speech Taggers
 
 The ``train_tagger.py`` script can use any corpus included with NLTK that implements a ``tagged_sents()`` method. It can also train on the ``timit`` corpus, which includes tagged sentences that are not available through the ``TimitCorpusReader``.
 
+Example usage can be found in `Training Part of Speech Taggers with NLTK Trainer <http://streamhacker.com/2011/03/21/training-part-speech-taggers-nltk-trainer//>`_.
+
 Train the default sequential backoff tagger on the treebank corpus::
 	``python train_tagger.py treebank``
 
@@ -127,7 +129,7 @@ Once you have a ``tagger`` object, you can use it to tag sentences (or lists of 
 Analyzing Tagger Coverage
 -------------------------
 
-The ``analyze_tagger_coverage.py`` script will run a part-of-speech tagger on a corpus to determine how many times each tag is found.
+The ``analyze_tagger_coverage.py`` script will run a part-of-speech tagger on a corpus to determine how many times each tag is found. Example output can be found in `Analyzing Tagged Corpora and NLTK Part of Speech Taggers <http://streamhacker.com/2011/03/23/analyzing-tagged-corpora-nltk-part-speech-taggers/>`_.
 
 Here's an example using the NLTK default tagger on the treebank corpus::
 	``python analyze_tagger_coverage.py treebank``
@@ -155,6 +157,8 @@ The ``analyze_tagged_corpus.py`` script will show the following statistics about
  * number of unique words
  * number of tags
  * the number of times each tag occurs
+
+Example output can be found in `Analyzing Tagged Corpora and NLTK Part of Speech Taggers <http://streamhacker.com/2011/03/23/analyzing-tagged-corpora-nltk-part-speech-taggers/>`_.
 
 To analyze the treebank corpus::
 	``python analyze_tagged_corpus.py treebank``

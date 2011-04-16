@@ -1,6 +1,7 @@
 import os, os.path
 import cPickle as pickle
 import nltk.data
+from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag.simplify import simplify_wsj_tag
 from tagging.readers import NumberedTaggedSentCorpusReader
 

@@ -72,7 +72,7 @@ if args.metrics:
 	tag_word_refs = collections.defaultdict(set)
 	tag_word_test = collections.defaultdict(set)
 	
-	for tagged_sent in corpus.tagged_sents():
+	for tagged_sent in corpus.tagged_sents(fileids=args.fileids):
 		for word, tag in tagged_sent:
 			tags_actual.inc(tag)
 			tag_refs.append(tag)

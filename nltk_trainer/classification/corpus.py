@@ -38,3 +38,22 @@ def multi_category_para_words(categorized_corpus, fileid_prefix=''):
 def multi_category_file_words(categorized_corpus, fileid_prefix=''):
 	for fileid, categories in corpus_fileid_categories(categorized_corpus, fileid_prefix):
 		yield categorized_corpus.words(fileids=[fileid]), categories
+
+################
+## csv output ##
+################
+
+def category_sent_strings(corpus):
+	for cat in corpus.categories():
+		for sent in corpus.sents(categories=[cat]):
+			yield cat, ' '.join(sent)
+
+def category_para_strings(corpus):
+	for cat in corpus.categories():
+		for para in corpus.paras(categories=[cat]):
+			yield cat, ' '.join([' '.join(sent) for sent in para])
+
+def category_file_strings(corpus):
+	for cat in corpus.categories():
+		for fileid in corpus.fileids(categories=[cat]):
+			yield cat, corpus.raw(fileids=[fileid])

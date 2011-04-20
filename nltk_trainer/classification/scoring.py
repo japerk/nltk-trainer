@@ -1,5 +1,5 @@
-import collections
-from nltk.metrics import masi_distance
+import collections, random
+from nltk.metrics import masi_distance, f_measure, precision, recall
 from nltk.probability import FreqDist, ConditionalFreqDist
 
 def sum_category_word_scores(categorized_words, score_fn):
@@ -60,3 +60,56 @@ def avg_masi_distance(multi_classifier, multi_label_feats):
 		return float(sum(mds)) / len(mds)
 	else:
 		return 0.0
+
+def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True):
+	if folds < 2:
+		raise ValueError('must have at least 3 folds')
+	
+	instances = list(instances) # ensure isn't an exhaustible iterable
+	random.shuffle(instances)
+	l = len(instances)
+	step = l / folds
+	
+	if trace:
+		print 'step %d over %d folds of %d instances' % (step, folds, l)
+	
+	accuracies = []
+	
+	for f in range(folds):
+		if trace:
+			print 'fold %d' % (f+1)
+		
+		start = f * step
+		end = start + step
+		train_instances = instances[:start] + instances[end:]
+		test_instances = instances[start:end]
+		
+		if trace:
+			print 'training on %d:%d + %d:%d' % (0, start, end, l)
+		
+		obj = trainf(train_instances)
+		
+		if trace:
+			print 'testing on %d:%d' % (start, end)
+		
+		if metrics:
+			refsets, testsets = ref_test_sets(obj, test_instances)
+			
+			for key in set(refsets.keys() + testsets.keys()):
+				ref = refsets[key]
+				test = testsets[key]
+				print '%s precision: %f' % (key, precision(ref, test) or 0)
+				print '%s recall: %f' % (key, recall(ref, test) or 0)
+				print '%s f-measure: %f' % (key, f_measure(ref, test) or 0)
+		
+		accuracy = testf(obj, test_instances)
+		
+		if trace:
+			print 'accuracy: %f' % accuracy
+		
+		accuracies.append(accuracy)
+	
+	if trace:
+		print 'average accuracy: %f' % (sum(accuracies) / folds)
+	
+	return accuracies

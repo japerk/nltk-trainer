@@ -109,6 +109,10 @@ eval_group.add_argument('--no-fmeasure', action='store_true', default=False,
 	help="don't evaluate f-measure")
 eval_group.add_argument('--no-masi-distance', action='store_true', default=False,
 	help="don't evaluate masi distance (only applies to a multi binary classifier)")
+eval_group.add_argument('--cross-fold', type=int, default=0,
+	help='''If given a number greater than 2, will do cross fold validation
+	instead of normal training and testing.
+	''')
 
 nltk_trainer.classification.args.add_maxent_args(parser)
 nltk_trainer.classification.args.add_decision_tree_args(parser)
@@ -268,6 +272,9 @@ if args.multi and args.binary:
 		print 'training a multi-binary %s classifier' % args.classifier
 	
 	classifier = MultiBinaryClassifier.train(labels, train_feats, trainf)
+elif args.cross_fold:
+	scoring.cross_fold(train_feats, trainf, accuracy, folds=args.cross_fold,
+		trace=args.trace, metrics=not args.no_eval)
 else:
 	if args.trace:
 		print 'training a %s classifier' % args.classifier
@@ -278,7 +285,7 @@ else:
 ## evaluation ##
 ################
 
-if not args.no_eval:
+if not args.no_eval and not args.cross_fold:
 	if not args.no_accuracy:
 		try:
 			print 'accuracy: %f' % accuracy(classifier, test_feats)
@@ -307,7 +314,7 @@ if not args.no_eval:
 			if not args.no_fmeasure:
 				print '%s f-measure: %f' % (label, f_measure(ref, test) or 0)
 
-if args.show_most_informative and args.classifier != 'DecisionTree' and not (args.multi and args.binary):
+if args.show_most_informative and args.classifier != 'DecisionTree' and not (args.multi and args.binary) and not args.cross_fold:
 	print '%d most informative features' % args.show_most_informative
 	classifier.show_most_informative_features(args.show_most_informative)
 
@@ -315,7 +322,7 @@ if args.show_most_informative and args.classifier != 'DecisionTree' and not (arg
 ## pickling ##
 ##############
 
-if not args.no_pickle:
+if not args.no_pickle and not args.cross_fold:
 	if args.filename:
 		fname = os.path.expanduser(args.filename)
 	else:

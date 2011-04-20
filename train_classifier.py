@@ -111,7 +111,9 @@ eval_group.add_argument('--no-masi-distance', action='store_true', default=False
 	help="don't evaluate masi distance (only applies to a multi binary classifier)")
 eval_group.add_argument('--cross-fold', type=int, default=0,
 	help='''If given a number greater than 2, will do cross fold validation
-	instead of normal training and testing.
+	instead of normal training and testing. This option implies --no-pickle,
+	is useless with --trace 0 and/or --no-eval, and currently does not work
+	with --multi --binary.
 	''')
 
 nltk_trainer.classification.args.add_maxent_args(parser)

@@ -1,4 +1,5 @@
 import collections, random
+from numpy import array
 from nltk.metrics import masi_distance, f_measure, precision, recall
 from nltk.probability import FreqDist, ConditionalFreqDist
 
@@ -65,7 +66,10 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True):
 	if folds < 2:
 		raise ValueError('must have at least 3 folds')
 	
-	instances = list(instances) # ensure isn't an exhaustible iterable
+	# ensure isn't an exhaustible iterable
+	instances = list(instances)
+	# randomize so get an even distribution, in case labeled instances are
+	# ordered by label
 	random.shuffle(instances)
 	l = len(instances)
 	step = l / folds
@@ -74,6 +78,9 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True):
 		print 'step %d over %d folds of %d instances' % (step, folds, l)
 	
 	accuracies = []
+	precisions = collections.defaultdict(list)
+	recalls = collections.defaultdict(list)
+	f_measures = collections.defaultdict(list)
 	
 	for f in range(folds):
 		if trace:
@@ -98,9 +105,17 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True):
 			for key in set(refsets.keys() + testsets.keys()):
 				ref = refsets[key]
 				test = testsets[key]
-				print '%s precision: %f' % (key, precision(ref, test) or 0)
-				print '%s recall: %f' % (key, recall(ref, test) or 0)
-				print '%s f-measure: %f' % (key, f_measure(ref, test) or 0)
+				p = precision(ref, test) or 0
+				r = recall(ref, test) or 0
+				f = f_measure(ref, test) or 0
+				precisions[key].append(p)
+				recalls[key].append(r)
+				f_measures[key].append(f)
+				
+				if trace:
+					print '%s precision: %f' % (key, p)
+					print '%s recall: %f' % (key, r)
+					print '%s f-measure: %f' % (key, f)
 		
 		accuracy = testf(obj, test_instances)
 		
@@ -110,6 +125,19 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True):
 		accuracies.append(accuracy)
 	
 	if trace:
-		print 'average accuracy: %f' % (sum(accuracies) / folds)
+		print 'mean accuracy: %f' % (sum(accuracies) / folds)
+		print 'accuracy variance: %f' % array(accuracies).var()
+		
+		for key, ps in precisions.iteritems():
+			print 'mean %s precision: %f' % (key, sum(ps) / folds)
+			print '%s precision variance: %f' % (key, array(ps).var())
+		
+		for key, rs in recalls.iteritems():
+			print 'mean %s recall: %f' % (key, sum(rs) / folds)
+			print '%s recall variance: %f' % (key, array(rs).var())
+		
+		for key, fs in f_measures.iteritems():
+			print 'mean %s f_measure: %f' % (key, sum(fs) / folds)
+			print '%s f_measure variance: %f' % (key, array(fs).var())
 	
 	return accuracies

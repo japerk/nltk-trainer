@@ -62,7 +62,7 @@ def avg_masi_distance(multi_classifier, multi_label_feats):
 	else:
 		return 0.0
 
-def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True):
+def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, informative=0):
 	if folds < 2:
 		raise ValueError('must have at least 3 folds')
 	
@@ -123,21 +123,24 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True):
 			print 'accuracy: %f' % accuracy
 		
 		accuracies.append(accuracy)
+		
+		if trace and informative and hasattr(obj, 'show_most_informative_features'):
+			obj.show_most_informative_features(informative)
 	
 	if trace:
-		print 'mean accuracy: %f' % (sum(accuracies) / folds)
+		print 'accuracy mean: %f' % (sum(accuracies) / folds)
 		print 'accuracy variance: %f' % array(accuracies).var()
 		
 		for key, ps in precisions.iteritems():
-			print 'mean %s precision: %f' % (key, sum(ps) / folds)
+			print '%s precision mean: %f' % (key, sum(ps) / folds)
 			print '%s precision variance: %f' % (key, array(ps).var())
 		
 		for key, rs in recalls.iteritems():
-			print 'mean %s recall: %f' % (key, sum(rs) / folds)
+			print '%s recall mean: %f' % (key, sum(rs) / folds)
 			print '%s recall variance: %f' % (key, array(rs).var())
 		
 		for key, fs in f_measures.iteritems():
-			print 'mean %s f_measure: %f' % (key, sum(fs) / folds)
+			print '%s f_measure mean: %f' % (key, sum(fs) / folds)
 			print '%s f_measure variance: %f' % (key, array(fs).var())
 	
-	return accuracies
+	return accuracies, precisions, recalls, f_measures

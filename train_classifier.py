@@ -274,7 +274,7 @@ if args.multi and args.binary:
 	classifier = MultiBinaryClassifier.train(labels, train_feats, trainf)
 elif args.cross_fold:
 	scoring.cross_fold(train_feats, trainf, accuracy, folds=args.cross_fold,
-		trace=args.trace, metrics=not args.no_eval)
+		trace=args.trace, metrics=not args.no_eval, informative=args.show_most_informative)
 else:
 	if args.trace:
 		print 'training a %s classifier' % args.classifier

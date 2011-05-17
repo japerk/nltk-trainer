@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import argparse, collections, itertools, math, os.path, re, string
+import argparse, collections, itertools, math, os.path, re, string, operator
 import nltk_trainer.classification.args
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
 from nltk.classify.util import accuracy
@@ -74,12 +74,8 @@ classifier_group.add_argument('--multi', action='store_true', default=False,
 
 feat_group = parser.add_argument_group('Feature Extraction',
 	'The default is to lowercase every word, strip punctuation, and use stopwords')
-feat_group.add_argument('--bigrams', action='store_true', default=False,
-	help='include bigrams as features.')
-feat_group.add_argument('--ngrams', action='store', default=1, type=int,
+feat_group.add_argument('--ngrams', action='append', type=int,
 	help='use n-grams as features.')
-feat_group.add_argument('--nmin-one', action='store_true', default=False,
-	help='use features of length n-gram-1 in action to n-grams.')
 feat_group.add_argument('--no-lowercase', action='store_true', default=False,
 	help="don't lowercase every word")
 feat_group.add_argument('--filter-stopwords', default='no',
@@ -188,13 +184,11 @@ def norm_words(words):
 	
 	if stopset:
 		words = [w for w in words if w.lower() not in stopset]
-	
-	if args.bigrams:
-		# If bigrams was passed as an argument, make it behave as it normally does currently.
-		args.ngrams = 2
-		args.nmin_one = True
-	if args.ngrams > 1:
-		return (ngrams(words, args.ngrams - 1) if args.nmin_one else []) + ngrams(words, args.ngrams)
+
+	if args.ngrams:
+		# If n == 1, take words instead of taking tuples of unigrams. This is because tuple(a,) != a.
+		#return reduce(operator.add, [(ngrams(words, n) if n > 1 else words) for n in args.ngrams])
+		return reduce(operator.add, [ngrams(words, n) for n in args.ngrams])
 	else:
 		return words
 

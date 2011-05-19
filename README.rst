@@ -19,13 +19,13 @@ Train a binary NaiveBayes classifier on the movie_reviews corpus, using paragrap
 	``python train_classifier.py --instances paras --classifier NaiveBayes movie_reviews``
 
 Include bigrams as features::
-	``python train_classifier.py --instances paras --classifier NaiveBayes --bigrams movie_reviews``
+	``python train_classifier.py --instances paras --classifier NaiveBayes --ngrams 1 --ngrams 2 movie_reviews``
 
 Minimum score threshold::
-	``python train_classifier.py --instances paras --classifier NaiveBayes --bigrams --min_score 3 movie_reviews``
+	``python train_classifier.py --instances paras --classifier NaiveBayes --ngrams 1 --ngrams 2 --min_score 3 movie_reviews``
 
 Maximum number of features::
-	``python train_classifier.py --instances paras --classifier NaiveBayes --bigrams --max_feats 1000 movie_reviews``
+	``python train_classifier.py --instances paras --classifier NaiveBayes --ngrams 1 --ngrams 2 --max_feats 1000 movie_reviews``
 
 Use the default Maxent algorithm::
 	``python train_classifier.py --instances paras --classifier Maxent movie_reviews``
@@ -64,10 +64,10 @@ Once you have a ``classifier`` object, you can use it to classify word features 
 	>>> feats = dict([(word, True) for word in words])
 	>>> classifier.classify(feats)
 
-If you used the ``--bigrams`` option, you should include bigrams in the dictionary using `nltk.util.bigrams(words) <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.util-module.html#bigrams>`_::
-	>>> from nltk.util import bigrams
+If you used the ``--ngrams`` option with values greater than 1, you should include these ngrams in the dictionary using `nltk.util.ngrams(words, n) <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.util-module.html#ngrams>`_::
+	>>> from nltk.util import ngrams
 	>>> words = ['some', 'words', 'in', 'a', 'sentence']
-	>>> feats = dict([(word, True) for word in words + bigrams(words)])
+	>>> feats = dict([(word, True) for word in words + ngrams(words, n)])
 	>>> classifier.classify(feats)
 
 The list of words you use for creating the feature dictionary should be created by `tokenizing <http://text-processing.com/demo/tokenize/>`_ the appropriate text instances: sentences, paragraphs, or files depending on the ``--instances`` option.

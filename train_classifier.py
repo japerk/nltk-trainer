@@ -186,7 +186,7 @@ def norm_words(words):
 		words = [w for w in words if w.lower() not in stopset]
 
 	if args.ngrams:
-		return reduce(operator.add, [ngrams(words, n) for n in args.ngrams])
+		return reduce(operator.add, [words if n == 1 else ngrams(words, n) for n in args.ngrams])
 	else:
 		return words
 

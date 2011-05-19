@@ -186,8 +186,6 @@ def norm_words(words):
 		words = [w for w in words if w.lower() not in stopset]
 
 	if args.ngrams:
-		# If n == 1, take words instead of taking tuples of unigrams. This is because tuple(a,) != a.
-		#return reduce(operator.add, [(ngrams(words, n) if n > 1 else words) for n in args.ngrams])
 		return reduce(operator.add, [ngrams(words, n) for n in args.ngrams])
 	else:
 		return words

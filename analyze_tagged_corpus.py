@@ -62,7 +62,7 @@ if args.corpus in ['conll2000', 'switchboard']:
 else:
 	kwargs = {'simplify_tags': args.simplify_tags}
 
-for word, tag in tagged_corpus.tagged_words(**kwargs):
+for word, tag in tagged_corpus.tagged_words(fileids=args.fileids, **kwargs):
 	if args.corpus in ['conll2000', 'switchboard'] and args.simplify_tags:
 		tag = simplify_wsj_tag(tag)
 	

@@ -21,6 +21,11 @@ def dump_object(obj, fname, trace=1):
 	pickle.dump(obj, f)
 	f.close()
 
+def import_attr(path):
+	basepath, name = path.rsplit('.', 1)
+	mod = __import__(basepath, globals(), locals(), [name])
+	return getattr(mod, name)
+
 def load_corpus_reader(corpus, reader=None, fileids=None):
 	if corpus == 'timit':
 		return LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader,
@@ -43,9 +48,7 @@ def load_corpus_reader(corpus, reader=None, fileids=None):
 			except LookupError:
 				raise ValueError('cannot find corpus path %s' % corpus)
 		
-		reader_path, reader_name = reader.rsplit('.', 1)
-		mod = __import__(reader_path, globals(), locals(), [reader_name])
-		reader_cls = getattr(mod, reader_name)
+		reader_cls = import_attr(reader)
 		# TODO: may also need to support optional args for initialization of reader class
 		real_corpus = reader_cls(root, fileids)
 	

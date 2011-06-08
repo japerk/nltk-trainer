@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import argparse, collections, itertools, math, os.path, re, string, operator
+import nltk.data
 import nltk_trainer.classification.args
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
 from nltk.classify.util import accuracy
@@ -9,7 +10,7 @@ from nltk.corpus.util import LazyCorpusLoader
 from nltk.metrics import BigramAssocMeasures, f_measure, masi_distance, precision, recall
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk.util import ngrams
-from nltk_trainer import dump_object
+from nltk_trainer import dump_object, import_attr
 from nltk_trainer.classification import corpus, scoring
 from nltk_trainer.classification.featx import bag_of_words, bag_of_words_in_set, train_test_feats
 from nltk_trainer.classification.multi import MultiBinaryClassifier
@@ -61,6 +62,9 @@ corpus_group.add_argument('--train-prefix', default='training',
 	help='training fileid prefix for multi classifiers, default is "training"')
 corpus_group.add_argument('--test-prefix', default='test',
 	help='testing fileid prefix for multi classifiers, default is "test"')
+corpus_group.add_argument('--word-tokenizer', default='', help='Word Tokenizer class path')
+corpus_group.add_argument('--sent-tokenizer', default='', help='Sent Tokenizer data.pickle path')
+corpus_group.add_argument('--para-block-reader', default='', help='Block reader function path')
 
 classifier_group = parser.add_argument_group('Classifier Type',
 	'''A binary classifier has only 2 labels, and is the default classifier type.
@@ -146,6 +150,15 @@ if args.cat_file:
 elif args.cat_pattern:
 	reader_args.append(args.cat_pattern)
 	reader_kwargs['cat_pattern'] = re.compile(args.cat_pattern)
+
+if args.word_tokenizer:
+	reader_kwargs['word_tokenizer'] = import_attr(args.word_tokenizer)()
+
+if args.sent_tokenizer:
+	reader_kwargs['sent_tokenizer'] = nltk.data.LazyLoader(args.sent_tokenizer)
+
+if args.para_block_reader:
+	reader_kwargs['para_block_reader'] = import_attr(args.para_block_reader)
 
 categorized_corpus = LazyCorpusLoader(args.corpus, reader_class[args.reader],
 	*reader_args, **reader_kwargs)

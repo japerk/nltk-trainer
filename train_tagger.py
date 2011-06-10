@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import argparse, math, itertools, os.path
-import nltk.corpus
+import nltk.corpus, nltk.data
 import nltk_trainer.classification.args
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
 # special case corpus readers
@@ -47,6 +47,8 @@ tagger_group.add_argument('--default', default='-None-',
 to change the default tag.''')
 tagger_group.add_argument('--simplify_tags', action='store_true', default=False,
 	help='Use simplified tags')
+tagger_group.add_argument('--backoff', default=None,
+	help='Path to pickled backoff tagger. If given, replaces default tagger.')
 
 sequential_group = parser.add_argument_group('Sequential Tagger')
 sequential_group.add_argument('--sequential', default='aubt',
@@ -172,7 +174,13 @@ if args.trace:
 ## default tagger ##
 ####################
 
-tagger = nltk.tag.DefaultTagger(args.default)
+if args.backoff:
+	if args.trace:
+		print 'loading backoff tagger %s' % args.backoff
+	
+	tagger = nltk.data.load(args.backoff)
+else:
+	tagger = nltk.tag.DefaultTagger(args.default)
 
 ################################
 ## sequential backoff taggers ##

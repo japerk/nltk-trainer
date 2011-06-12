@@ -1,5 +1,33 @@
-import collections
-from nltk.classify import MultiClassifierI
+import collections, itertools
+from nltk.classify import ClassifierI, MultiClassifierI
+from nltk.probability import DictionaryProbDist
+
+class AvgProbClassifier(ClassifierI):
+	def __init__(self, classifiers):
+		self._classifiers = classifiers
+		self._labels = sorted(set(itertools.chain(*[c.labels() for c in classifiers])))
+	
+	def labels(self):
+		return self._labels
+	
+	def classify(self, feat):
+		return self.prob_classify(feat).max()
+	
+	def prob_classify(self, feat):
+		label_probs = collections.defaultdict(list)
+		
+		for classifier in self._classifiers:
+			cprobs = classifier.prob_classify(feat)
+			
+			for label in cprobs.samples():
+				label_probs[label].append(cprobs.prob(label))
+		
+		avg_probs = {}
+		
+		for label, probs in label_probs.items():
+			avg_probs[label] = float(sum(probs)) / len(probs)
+		
+		return DictionaryProbDist(avg_probs)
 
 class MultiBinaryClassifier(MultiClassifierI):
 	def __init__(self, label_classifiers):

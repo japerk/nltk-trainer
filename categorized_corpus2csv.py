@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import argparse, csv, os.path
 import nltk_trainer.classification.corpus
 from nltk_trainer import load_corpus_reader

@@ -10,7 +10,7 @@ from nltk_trainer import load_corpus_reader
 ## command options & argument parsing ##
 ########################################
 
-parser = argparse.ArgumentParser(description='Analyze a part-of-speech tagged corpus',
+parser = argparse.ArgumentParser(description='Analyze a part-of-speech tagger on a tagged corpus',
 	formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('corpus',

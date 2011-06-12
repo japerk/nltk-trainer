@@ -26,7 +26,7 @@ def import_attr(path):
 	mod = __import__(basepath, globals(), locals(), [name])
 	return getattr(mod, name)
 
-def load_corpus_reader(corpus, reader=None, fileids=None):
+def load_corpus_reader(corpus, reader=None, fileids=None, **kwargs):
 	if corpus == 'timit':
 		return LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader,
 			'.+\.tags', tag_mapping_function=simplify_wsj_tag)
@@ -49,7 +49,6 @@ def load_corpus_reader(corpus, reader=None, fileids=None):
 				raise ValueError('cannot find corpus path %s' % corpus)
 		
 		reader_cls = import_attr(reader)
-		# TODO: may also need to support optional args for initialization of reader class
-		real_corpus = reader_cls(root, fileids)
+		real_corpus = reader_cls(root, fileids, **kwargs)
 	
 	return real_corpus

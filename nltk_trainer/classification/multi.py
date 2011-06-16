@@ -1,6 +1,41 @@
-import collections, itertools
+import collections, copy, itertools
 from nltk.classify import ClassifierI, MultiClassifierI
-from nltk.probability import DictionaryProbDist
+from nltk.probability import DictionaryProbDist, MutableProbDist
+
+class HierarchicalClassifier(ClassifierI):
+	def __init__(self, root, label_classifiers):
+		self.root = root
+		self.label_classifiers = label_classifiers
+		self._labels = copy.copy(self.root.labels())
+		
+		for label, classifier in self.label_classifiers.items():
+			# label will never be returned from self.classify()
+			self._labels.remove(label)
+			self._labels.extend(classifier.labels())
+	
+	def labels(self):
+		return self._labels
+	
+	def classify(self, feat):
+		label = self.root.classify(feat)
+		
+		if label in self.label_classifiers:
+			return self.label_classifiers[label].classify(feat)
+		else:
+			return label
+	
+	def prob_classify(self, feat):
+		probs = self.root.prob_classify(feat)
+		# passing in self.labels() ensures it doesn't have any of label_classifiers.keys()
+		mult = MutableProbDist(probs, self.labels(), store_logs=False)
+		
+		for classifier in self.label_classifiers.values():
+			pd = classifier.prob_classify(feat)
+			
+			for sample in pd.samples():
+				mult.update(sample, pd.prob(sample), log=False)
+		
+		return mult
 
 class AvgProbClassifier(ClassifierI):
 	def __init__(self, classifiers):

@@ -15,14 +15,18 @@ parser.add_argument('filename', default='~/nltk_data/classifiers/combined.pickle
 	help='Filename to pickle combined classifier, defaults to %(default)s')
 parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to 1. 0 is no trace output.')
+parser.add_argument('--hierarchy', nargs='+',
+	help='''Mapping of labels to classifier pickle paths to specify a classification hierarchy, such as
+	"-h neutral:classifiers/movie_reviews.pickle"
+	''')
 
 args = parser.parse_args()
 
-#########################
-## combine classifiers ##
-#########################
+#####################
+## AvgProb combine ##
+#####################
 
-# TODO: support MaxVote combining, Hierarchical combinations
+# TODO: support MaxVote combining
 
 classifiers = []
 
@@ -33,6 +37,30 @@ for name in args.classifiers:
 	classifiers.append(nltk.data.load(name))
 
 combined = multi.AvgProbClassifier(classifiers)
+
+##########################
+## Hierarchical combine ##
+##########################
+
+labels = combined.labels()
+label_classifiers = {}
+
+for h in args.hierarchy:
+	label, path = h.split(':')
+	
+	if label not in labels:
+		raise ValueError('%s is not in root labels: %s' % (label, labels))
+	
+	label_classifiers[label] = nltk.data.load(path)
+	
+	if args.trace:
+		print 'mapping %s to %s from %s' % (label, label_classifiers[label], path)
+
+if label_classifiers:
+	if args.trace:
+		'combining %d label classifiers for root %s' % (len(label_classifiers), combined)
+	
+	combined = multi.HierarchicalClassifier(combined, label_classifiers)
 
 ##############################
 ## dump combined classifier ##

@@ -59,8 +59,10 @@ word_set = set()
 
 if args.corpus in ['conll2000', 'switchboard']:
 	kwargs = {}
+elif args.simplify_tags:
+	kwargs = {'simplify_tags': True}
 else:
-	kwargs = {'simplify_tags': args.simplify_tags}
+	kwargs = {}
 
 for word, tag in tagged_corpus.tagged_words(fileids=args.fileids, **kwargs):
 	if args.corpus in ['conll2000', 'switchboard'] and args.simplify_tags:

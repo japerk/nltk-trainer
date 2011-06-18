@@ -1,4 +1,5 @@
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
+from .multi import AvgProbClassifier
 
 classifier_choices = ['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS
 
@@ -30,30 +31,56 @@ def add_decision_tree_args(parser):
 		help='default is 10')
 
 def make_classifier_builder(args):
-	if args.classifier not in classifier_choices:
-		raise ValueError('classifier %s is not supported' % args.classifier)
-	
-	classifier_train_kwargs = {}
-	
-	if args.classifier == 'DecisionTree':
-		classifier_train = DecisionTreeClassifier.train
-		classifier_train_kwargs['binary'] = False
-		classifier_train_kwargs['entropy_cutoff'] = args.entropy_cutoff
-		classifier_train_kwargs['depth_cutoff'] = args.depth_cutoff
-		classifier_train_kwargs['support_cutoff'] = args.support_cutoff
-		classifier_train_kwargs['verbose'] = args.trace
-	elif args.classifier == 'NaiveBayes':
-		classifier_train = NaiveBayesClassifier.train
-	elif args.classifier == 'Scikits':
-		classifier_train = ScikitsClassifier.train
+	if isinstance(args.classifier, basestring):
+		algos = [args.classifier]
 	else:
-		if args.classifier != 'Maxent':
-			classifier_train_kwargs['algorithm'] = args.classifier
-		
-		classifier_train = MaxentClassifier.train
-		classifier_train_kwargs['max_iter'] = args.max_iter
-		classifier_train_kwargs['min_ll'] = args.min_ll
-		classifier_train_kwargs['min_lldelta'] = args.min_lldelta
-		classifier_train_kwargs['trace'] = args.trace
+		algos = args.classifier
 	
-	return lambda(train_feats): classifier_train(train_feats, **classifier_train_kwargs)
+	for algo in algos:
+		if algo not in classifier_choices:
+			raise ValueError('classifier %s is not supported' % algo)
+	
+	classifier_train_args = []
+	
+	for algo in algos:
+		classifier_train_kwargs = {}
+		
+		if algo == 'DecisionTree':
+			classifier_train = DecisionTreeClassifier.train
+			classifier_train_kwargs['binary'] = False
+			classifier_train_kwargs['entropy_cutoff'] = args.entropy_cutoff
+			classifier_train_kwargs['depth_cutoff'] = args.depth_cutoff
+			classifier_train_kwargs['support_cutoff'] = args.support_cutoff
+			classifier_train_kwargs['verbose'] = args.trace
+		elif algo == 'NaiveBayes':
+			classifier_train = NaiveBayesClassifier.train
+		elif algo == 'Scikits':
+			classifier_train = ScikitsClassifier.train
+		else:
+			if algo != 'Maxent':
+				classifier_train_kwargs['algorithm'] = algo
+			
+			classifier_train = MaxentClassifier.train
+			classifier_train_kwargs['max_iter'] = args.max_iter
+			classifier_train_kwargs['min_ll'] = args.min_ll
+			classifier_train_kwargs['min_lldelta'] = args.min_lldelta
+			classifier_train_kwargs['trace'] = args.trace
+		
+		classifier_train_args.append((algo, classifier_train, classifier_train_kwargs))
+	
+	def trainf(train_feats):
+		classifiers = []
+		
+		for algo, classifier_train, train_kwargs in classifier_train_args:
+			if args.trace:
+				print 'training %s classifier' % algo
+			
+			classifiers.append(classifier_train(train_feats, **train_kwargs))
+		
+		if len(classifiers) == 1:
+			return classifiers[0]
+		else:
+			return AvgProbClassifier(classifiers)
+	
+	return trainf
+	#return lambda(train_feats): classifier_train(train_feats, **classifier_train_kwargs)

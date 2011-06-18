@@ -1,6 +1,6 @@
 import collections, copy, itertools
 from nltk.classify import ClassifierI, MultiClassifierI
-from nltk.probability import DictionaryProbDist, MutableProbDist
+from nltk.probability import FreqDist, DictionaryProbDist, MutableProbDist
 
 class HierarchicalClassifier(ClassifierI):
 	def __init__(self, root, label_classifiers):
@@ -46,7 +46,13 @@ class AvgProbClassifier(ClassifierI):
 		return self._labels
 	
 	def classify(self, feat):
-		return self.prob_classify(feat).max()
+		label_freqs = FreqDist()
+		# NOTE: not using prob_classify because not all classifiers support it
+		# (like DecisionTree)
+		for classifier in self._classifiers:
+			label_freqs.inc(classifier.classify(feat))
+		
+		return label_freqs.max()
 	
 	def prob_classify(self, feat):
 		label_probs = collections.defaultdict(list)

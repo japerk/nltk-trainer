@@ -50,8 +50,8 @@ This can be any combination of the following letters:
 	b: BigramTagger
 	t: TrigramTagger
 The default is "%(default)s". If you specify a classifier, this option will be ignored.''')
-chunker_group.add_argument('--classifier', default=None,
-	choices=nltk_trainer.classification.args.classifier_choices,
+chunker_group.add_argument('--classifier', nargs='*',
+	#choices=nltk_trainer.classification.args.classifier_choices,
 	help='''ClassifierChunker algorithm to use instead of a sequential Tagger based Chunker.
 Maxent uses the default Maxent training algorithm, either CG or iis.''')
 
@@ -178,7 +178,7 @@ if args.sequential and not args.classifier:
 
 if args.classifier:
 	if args.trace:
-		print 'training %s ClassifierChunker' % args.classifier
+		print 'training ClassifierChunker with %s classifier' % args.classifier
 	# TODO: feature extraction options
 	chunker = chunkers.ClassifierChunker(train_chunks, verbose=args.trace,
 		classifier_builder=nltk_trainer.classification.args.make_classifier_builder(args))

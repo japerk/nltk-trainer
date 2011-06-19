@@ -27,7 +27,7 @@ parser.add_argument('--filename', help='''filename/path for where to store the
 	~/nltk_data/classifiers''')
 parser.add_argument('--no-pickle', action='store_true', default=False,
 	help="don't pickle and save the classifier")
-parser.add_argument('--classifier', '--algorithm', default='NaiveBayes',
+parser.add_argument('--classifier', '--algorithm', default='NaiveBayes', nargs='+',
 	choices=nltk_trainer.classification.args.classifier_choices,
 	help='''Classifier algorithm to use, defaults to %(default)s. Maxent uses the
 	default Maxent training algorithm, either CG or iis.''')
@@ -284,7 +284,7 @@ trainf = nltk_trainer.classification.args.make_classifier_builder(args)
 
 if args.multi and args.binary:
 	if args.trace:
-		print 'training a multi-binary %s classifier' % args.classifier
+		print 'training multi-binary %s classifier' % args.classifier
 	
 	classifier = MultiBinaryClassifier.train(labels, train_feats, trainf)
 elif args.cross_fold:
@@ -292,7 +292,7 @@ elif args.cross_fold:
 		trace=args.trace, metrics=not args.no_eval, informative=args.show_most_informative)
 else:
 	if args.trace:
-		print 'training a %s classifier' % args.classifier
+		print 'training %s classifier' % args.classifier
 	
 	classifier = trainf(train_feats)
 
@@ -329,7 +329,7 @@ if not args.no_eval and not args.cross_fold:
 			if not args.no_fmeasure:
 				print '%s f-measure: %f' % (label, f_measure(ref, test) or 0)
 
-if args.show_most_informative and args.classifier != 'DecisionTree' and not (args.multi and args.binary) and not args.cross_fold:
+if args.show_most_informative and hasattr(classifier, 'show_most_informative') and not (args.multi and args.binary) and not args.cross_fold:
 	print '%d most informative features' % args.show_most_informative
 	classifier.show_most_informative_features(args.show_most_informative)
 
@@ -341,7 +341,7 @@ if not args.no_pickle and not args.cross_fold:
 	if args.filename:
 		fname = os.path.expanduser(args.filename)
 	else:
-		name = '%s_%s.pickle' % (args.corpus, args.classifier)
+		name = '%s_%s.pickle' % (args.corpus, '_'.join(args.classifier))
 		fname = os.path.join(os.path.expanduser('~/nltk_data/classifiers'), name)
 	
 	dump_object(classifier, fname, trace=args.trace)

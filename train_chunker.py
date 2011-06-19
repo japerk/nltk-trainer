@@ -51,7 +51,7 @@ This can be any combination of the following letters:
 	t: TrigramTagger
 The default is "%(default)s". If you specify a classifier, this option will be ignored.''')
 chunker_group.add_argument('--classifier', nargs='*',
-	#choices=nltk_trainer.classification.args.classifier_choices,
+	choices=nltk_trainer.classification.args.classifier_choices,
 	help='''ClassifierChunker algorithm to use instead of a sequential Tagger based Chunker.
 Maxent uses the default Maxent training algorithm, either CG or iis.''')
 

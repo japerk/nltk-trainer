@@ -75,7 +75,7 @@ brill_group.add_argument('--max_rules', type=int, default=200)
 brill_group.add_argument('--min_score', type=int, default=2)
 
 classifier_group = parser.add_argument_group('Classifier Based Tagger')
-classifier_group.add_argument('--classifier', default=None,
+classifier_group.add_argument('--classifier', nargs='*',
 	choices=nltk_trainer.classification.args.classifier_choices,
 	help='''ClassifierBasedPOSTagger algorithm to use, default is %(default)s.
 Maxent uses the default Maxent training algorithm, either CG or iis.''')
@@ -248,7 +248,7 @@ if args.classifier:
 		cls = ClassifierBasedPOSTagger
 	
 	if args.trace:
-		print 'training a %s %s' % (args.classifier, cls.__name__)
+		print 'training %s %s' % (args.classifier, cls.__name__)
 	
 	tagger = cls(**kwargs)
 
@@ -283,7 +283,7 @@ if not args.no_pickle:
 			parts.append('brill')
 		
 		if args.classifier:
-			parts.append(args.classifier)
+			parts.append('_'.join(args.classifier))
 		
 		if args.sequential:
 			parts.append(args.sequential)

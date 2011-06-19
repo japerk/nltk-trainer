@@ -46,22 +46,28 @@ class AvgProbClassifier(ClassifierI):
 		return self._labels
 	
 	def classify(self, feat):
+		'''Return the label with the most agreement among classifiers'''
 		label_freqs = FreqDist()
-		# NOTE: not using prob_classify because not all classifiers support it
-		# (like DecisionTree)
+		
 		for classifier in self._classifiers:
 			label_freqs.inc(classifier.classify(feat))
 		
 		return label_freqs.max()
 	
 	def prob_classify(self, feat):
+		'''Return ProbDistI of averaged label probabilities.'''
 		label_probs = collections.defaultdict(list)
 		
 		for classifier in self._classifiers:
-			cprobs = classifier.prob_classify(feat)
-			
-			for label in cprobs.samples():
-				label_probs[label].append(cprobs.prob(label))
+			try:
+				cprobs = classifier.prob_classify(feat)
+				
+				for label in cprobs.samples():
+					label_probs[label].append(cprobs.prob(label))
+			except NotImplementedError:
+				# if we can't do prob_classify (like for DecisionTree)
+				# assume 100% probability from classify
+				label_probs[classifier.classify(feat)].append(1)
 		
 		avg_probs = {}
 		

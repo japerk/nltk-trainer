@@ -58,10 +58,10 @@ corpus_group.add_argument('--fraction', default=1.0, type=float,
 	The default is to use the entire corpus, and to test the classifier
 	against the same training data. Any number < 1 will test against
 	the remaining fraction.''')
-corpus_group.add_argument('--train-prefix', default='training',
-	help='training fileid prefix for multi classifiers, default is "training"')
-corpus_group.add_argument('--test-prefix', default='test',
-	help='testing fileid prefix for multi classifiers, default is "test"')
+corpus_group.add_argument('--train-prefix', default=None,
+	help='optional training fileid prefix for multi classifiers')
+corpus_group.add_argument('--test-prefix', default=None,
+	help='optional testing fileid prefix for multi classifiers')
 corpus_group.add_argument('--word-tokenizer', default='', help='Word Tokenizer class path')
 corpus_group.add_argument('--sent-tokenizer', default='', help='Sent Tokenizer data.pickle path')
 corpus_group.add_argument('--para-block-reader', default='', help='Block reader function path')
@@ -273,8 +273,8 @@ else:
 		train_feats.extend(ltrain_feats)
 		test_feats.extend(ltest_feats)
 	
-	if args.trace:
-		print '%d training feats, %d testing feats' % (len(train_feats), len(test_feats))
+if args.trace:
+	print '%d training feats, %d testing feats' % (len(train_feats), len(test_feats))
 
 ##############
 ## training ##

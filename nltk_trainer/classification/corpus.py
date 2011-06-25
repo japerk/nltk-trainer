@@ -22,7 +22,7 @@ def category_file_words(categorized_corpus, category):
 
 def corpus_fileid_categories(categorized_corpus, prefix):
 	for fileid in categorized_corpus.fileids():
-		if fileid.startswith(prefix):
+		if not prefix or fileid.startswith(prefix):
 			yield fileid, set(categorized_corpus.categories(fileids=[fileid]))
 	
 def multi_category_sent_words(categorized_corpus, fileid_prefix=''):

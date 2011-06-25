@@ -97,13 +97,27 @@ class MultiBinaryClassifier(MultiClassifierI):
 	def train(cls, labels, multi_label_feats, trainf, **train_kwargs):
 		labelset = set(labels)
 		label_feats = collections.defaultdict(list)
+		pos_label_feats = collections.defaultdict(set)
 		
 		for feat, multi_labels in multi_label_feats:
 			for label in multi_labels:
 				label_feats[label].append((feat, True))
+				# dicts are unhashable, so use a normalized tuple of key-values
+				pos_label_feats[label].add(tuple(sorted(feat.items())))
 			
 			for label in labelset - set(multi_labels):
 				label_feats[label].append((feat, False))
+		
+		for label in label_feats.keys():
+			feats = []
+			# this re-creates the feats list by ignoring any negative feat dicts
+			# that are also in pos_label_feats[label] so we don't create
+			# training conflicts
+			for feat, l in label_feats[label]:
+				if l or tuple(sorted(feat.items())) not in pos_label_feats[label]:
+					feats.append((feat, l))
+			
+			label_feats[label] = feats
 		
 		label_classifiers = {}
 		

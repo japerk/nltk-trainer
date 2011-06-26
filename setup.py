@@ -16,7 +16,7 @@ setup(
 	long_description=open('README.rst').read(),
 	install_requires=(
 		'argparse>=1.1',
-		'nltk>=2.0b9',
+		'nltk>=2.0b8',
 		'numpy==1.3.0',
 		'scipy==0.7.0',
 	)

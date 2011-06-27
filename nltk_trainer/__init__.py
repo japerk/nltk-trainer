@@ -3,7 +3,7 @@ import cPickle as pickle
 import nltk.data
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag.simplify import simplify_wsj_tag
-from .tagging.readers import NumberedTaggedSentCorpusReader
+from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
 
 def dump_object(obj, fname, trace=1):
 	dirname = os.path.dirname(fname)

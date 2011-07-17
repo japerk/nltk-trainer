@@ -10,7 +10,7 @@ from nltk.corpus.util import LazyCorpusLoader
 from nltk.metrics import BigramAssocMeasures, f_measure, masi_distance, precision, recall
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk.util import ngrams
-from nltk_trainer import dump_object, import_attr
+from nltk_trainer import dump_object, import_attr, load_corpus_reader
 from nltk_trainer.classification import corpus, scoring
 from nltk_trainer.classification.featx import bag_of_words, bag_of_words_in_set, train_test_feats
 from nltk_trainer.classification.multi import MultiBinaryClassifier
@@ -37,9 +37,9 @@ parser.add_argument('--show-most-informative', default=0, type=int,
 	help='number of most informative features to show, works for all algorithms except DecisionTree')
 
 corpus_group = parser.add_argument_group('Training Corpus')
-corpus_group.add_argument('--reader', choices=('plaintext', 'tagged'),
-	default='plaintext',
-	help='specify categorized plaintext or part-of-speech tagged corpus')
+corpus_group.add_argument('--reader',
+	default='nltk.corpus.reader.CategorizedPlaintextCorpusReader',
+	help='Full module path to a corpus reader class, such as %(default)s')
 corpus_group.add_argument('--cat_pattern', default='(.+)/.+',
 	help='''A regular expression pattern to identify categories based on file paths.
 	If cat_file is also given, this pattern is used to identify corpus file ids.
@@ -129,11 +129,6 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-reader_class = {
-	'plaintext': CategorizedPlaintextCorpusReader,
-	'tagged': CategorizedTaggedCorpusReader
-}
-
 reader_args = []
 reader_kwargs = {}
 
@@ -160,8 +155,15 @@ if args.sent_tokenizer:
 if args.para_block_reader:
 	reader_kwargs['para_block_reader'] = import_attr(args.para_block_reader)
 
-categorized_corpus = LazyCorpusLoader(args.corpus, reader_class[args.reader],
+if args.trace:
+	print 'loading %s' % args.corpus
+
+categorized_corpus = load_corpus_reader(args.corpus, args.reader,
 	*reader_args, **reader_kwargs)
+
+if not hasattr(categorized_corpus, 'categories'):
+	raise ValueError('%s is does not have categories for classification')
+
 labels = categorized_corpus.categories()
 nlabels = len(labels)
 
@@ -291,9 +293,6 @@ elif args.cross_fold:
 	scoring.cross_fold(train_feats, trainf, accuracy, folds=args.cross_fold,
 		trace=args.trace, metrics=not args.no_eval, informative=args.show_most_informative)
 else:
-	if args.trace:
-		print 'training %s classifier' % args.classifier
-	
 	classifier = trainf(train_feats)
 
 ################

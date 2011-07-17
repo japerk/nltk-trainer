@@ -109,16 +109,10 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-tagged_corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
-
-if not tagged_corpus:
-	raise ValueError('%s is an unknown corpus')
-
 if args.trace:
-	print 'loading nltk.corpus.%s' % args.corpus
-# trigger loading so it has its true class
-tagged_corpus.fileids()
-# fileid is used for corpus naming, if it exists
+	print 'loading %s' % args.corpus
+
+tagged_corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 fileids = args.fileids
 kwargs = {}
 
@@ -130,7 +124,7 @@ elif args.simplify_tags and args.corpus in ['pl196x']:
 	raise ValueError('%s does not support simplify_tags' % args.corpus)
 
 if isinstance(tagged_corpus, SwitchboardCorpusReader):
-	if args.fileids:
+	if fileids:
 		raise ValueError('fileids cannot be used with switchboard')
 	
 	tagged_sents = list(itertools.chain(*[[list(s) for s in d if s] for d in tagged_corpus.tagged_discourses(**kwargs)]))

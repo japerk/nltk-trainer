@@ -69,14 +69,10 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-chunked_corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
-
-if not chunked_corpus:
-	raise ValueError('%s is an unknown corpus')
-
 if args.trace:
-	print 'loading nltk.corpus.%s' % args.corpus
-# trigger loading so it has its true class
+	print 'loading %s' % args.corpus
+
+chunked_corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 chunked_corpus.fileids()
 fileids = args.fileids
 kwargs = {}

@@ -29,3 +29,15 @@ it_cross_fold_validates() {
 	folds=$(./train_classifier.py movie_reviews --cross-fold 3 2>&1|grep "training NaiveBayes classifier" -c)
 	test $folds -eq 3
 }
+
+it_trains_movie_reviews_sents() {
+	test "$(./train_classifier.py movie_reviews --no-pickle --no-eval --fraction 0.5 --instances sents)" "=" "loading movie_reviews
+2 labels: ['neg', 'pos']
+33880 training feats, 33878 testing feats
+training NaiveBayes classifier"
+}
+
+it_trains_movie_reviews_maxent() {
+	last_line=$(./train_classifier.py movie_reviews --classifier Maxent --no-pickle --no-eval --fraction 0.5 --instances paras 2>&1 | tail -n 1)
+	test "$last_line" "=" "training Maxent classifier"
+}

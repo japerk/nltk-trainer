@@ -45,3 +45,21 @@ it_trains_ub() {
 training <class 'nltk.tag.sequential.UnigramTagger'> tagger with backoff <DefaultTagger: tag=-None->
 training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=8435>"
 }
+
+it_trains_naive_bayes_classifier() {
+	test "$(./train_tagger.py treebank --sequential '' --classifier NaiveBayes --no-pickle --no-eval --fraction 0.5)" "=" "loading treebank
+3914 tagged sents, training on 1957
+training ['NaiveBayes'] ClassifierBasedPOSTagger
+Constructing training corpus for classifier.
+Training classifier (50641 instances)
+training NaiveBayes classifier"
+}
+
+it_trains_treebank_simplify_tags() {
+	test "$(./train_tagger.py treebank --simplify_tags --no-pickle --no-eval --fraction 0.5)" "=" "loading treebank
+3914 tagged sents, training on 1957
+training AffixTagger with affix -3 and backoff <DefaultTagger: tag=-None->
+training <class 'nltk.tag.sequential.UnigramTagger'> tagger with backoff <AffixTagger: size=2026>
+training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=3177>
+training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=1065>"
+}

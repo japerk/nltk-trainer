@@ -27,8 +27,29 @@ it_trains_treebank_chunk() {
 training ub TagChunker"
 }
 
+it_trains_treebank_chunk_u() {
+	test "$(./train_chunker.py treebank_chunk --sequential u --no-pickle --no-eval --fraction 0.5)" "=" "loading treebank_chunk
+4009 chunks, training on 2005
+training u TagChunker"
+}
+
 it_trains_corpora_treebank_tagged() {
 	test "$(./train_chunker.py corpora/treebank/tagged --reader nltk.corpus.reader.ChunkedCorpusReader --no-pickle --no-eval --fraction 0.5)" "=" "loading corpora/treebank/tagged
 51002 chunks, training on 25501
+training ub TagChunker"
+}
+
+it_trains_treebank_chunk_naive_bayes_classifier() {
+	test "$(./train_chunker.py treebank_chunk --classifier NaiveBayes --no-pickle --no-eval --fraction 0.5)" "=" "loading treebank_chunk
+4009 chunks, training on 2005
+training ClassifierChunker with ['NaiveBayes'] classifier
+Constructing training corpus for classifier.
+Training classifier (48403 instances)
+training NaiveBayes classifier"
+}
+
+it_trains_conll2000() {
+	test "$(./train_chunker.py conll2000 --no-pickle --no-eval --fraction 0.5)" "=" "loading conll2000
+10948 chunks, training on 5474
 training ub TagChunker"
 }

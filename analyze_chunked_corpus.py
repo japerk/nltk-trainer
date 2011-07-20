@@ -46,7 +46,7 @@ if not chunked_corpus:
 	raise ValueError('%s is an unknown corpus')
 
 if args.trace:
-	print 'loading nltk.corpus.%s' % args.corpus
+	print 'loading %s' % args.corpus
 
 ##############
 ## counting ##

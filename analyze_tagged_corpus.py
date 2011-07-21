@@ -47,7 +47,7 @@ if not tagged_corpus:
 	raise ValueError('%s is an unknown corpus')
 
 if args.trace:
-	print 'loading nltk.corpus.%s' % args.corpus
+	print 'loading %s' % args.corpus
 
 ##############
 ## counting ##
@@ -69,6 +69,8 @@ for word, tag in tagged_corpus.tagged_words(fileids=args.fileids, **kwargs):
 		tag = simplify_wsj_tag(tag)
 	
 	wc += 1
+	# loading corpora/treebank/tagged with ChunkedCorpusReader produces None tags
+	if not isinstance(tag, basestring): tag = str(tag)
 	tag_counts.inc(tag)
 	word_set.add(word)
 

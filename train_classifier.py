@@ -328,7 +328,7 @@ if not args.no_eval and not args.cross_fold:
 			if not args.no_fmeasure:
 				print '%s f-measure: %f' % (label, f_measure(ref, test) or 0)
 
-if args.show_most_informative and hasattr(classifier, 'show_most_informative') and not (args.multi and args.binary) and not args.cross_fold:
+if args.show_most_informative and hasattr(classifier, 'show_most_informative_features') and not (args.multi and args.binary) and not args.cross_fold:
 	print '%d most informative features' % args.show_most_informative
 	classifier.show_most_informative_features(args.show_most_informative)
 

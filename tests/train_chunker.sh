@@ -12,8 +12,8 @@ it_needs_corpus_reader() {
 }
 
 it_cannot_import_reader() {
-	last_line=$(./train_chunker.py foo --reader nltk.corpus.reader.Foo 2>&1 | tail -n 1)
-	test "$last_line" "=" "ValueError: cannot find corpus path for foo"
+	last_line=$(./train_chunker.py corpora/treebank/tagged --reader nltk.corpus.reader.Foo 2>&1 | tail -n 1)
+	test "$last_line" "=" "AttributeError: 'module' object has no attribute 'Foo'"
 }
 
 it_cannot_find_foo() {

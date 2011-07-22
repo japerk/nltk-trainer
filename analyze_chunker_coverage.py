@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import argparse, collections
+import argparse, collections, math
 import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
@@ -70,14 +70,25 @@ if args.score:
 	if args.trace:
 		print 'evaluating chunker score\n'
 	
-	print chunker.evaluate(corpus.chunked_sents()), '\n'
+	chunked_sents = corpus.chunked_sents()
+	
+	if args.fraction != 1.0:
+		cutoff = math.ceil(len(chunked_sents) * args.fraction)
+		chunked_sents = chunked_sents[:cutoff]
+	
+	print chunker.evaluate(chunked_sents), '\n'
 
 if args.trace:
 	print 'analyzing chunker coverage of %s with %s\n' % (args.corpus, chunker.__class__.__name__)
 
 iobs_found = FreqDist()
+sents = corpus.sents()
 
-for sent in corpus.sents():
+if args.fraction != 1.0:
+	cutoff = math.ceil(len(sents) * args.fraction)
+	sents = sents[:cutoff]
+
+for sent in sents:
 	tree = chunker.parse(tagger.tag(sent))
 	
 	for child in tree.subtrees(lambda t: t.node != 'S'):

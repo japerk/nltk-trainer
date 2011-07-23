@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import argparse, collections
+import argparse, collections, math
 import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
@@ -71,8 +71,13 @@ if args.metrics:
 	tag_test = []
 	tag_word_refs = collections.defaultdict(set)
 	tag_word_test = collections.defaultdict(set)
+	tagged_sents = corpus.tagged_sents(fileids=args.fileids)
 	
-	for tagged_sent in corpus.tagged_sents(fileids=args.fileids):
+	if args.fraction != 1.0:
+		cutoff = int(math.ceil(len(tagged_sents) * args.fraction))
+		tagged_sents = tagged_sents[:cutoff]
+	
+	for tagged_sent in tagged_sents:
 		for word, tag in tagged_sent:
 			tags_actual.inc(tag)
 			tag_refs.append(tag)
@@ -106,7 +111,13 @@ if args.metrics:
 	
 	print '=======  =========  ==========  =============  =========='
 else:
-	for sent in corpus.sents():
+	sents = corpus.sents()
+	
+	if args.fraction != 1.0:
+		cutoff = int(math.ceil(len(sents) * args.fraction))
+		sents = sents[:cutoff]
+	
+	for sent in sents:
 		for word, tag in tagger.tag(sent):
 			tags_found.inc(tag)
 	

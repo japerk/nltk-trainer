@@ -73,7 +73,7 @@ if args.score:
 	chunked_sents = corpus.chunked_sents()
 	
 	if args.fraction != 1.0:
-		cutoff = math.ceil(len(chunked_sents) * args.fraction)
+		cutoff = int(math.ceil(len(chunked_sents) * args.fraction))
 		chunked_sents = chunked_sents[:cutoff]
 	
 	print chunker.evaluate(chunked_sents), '\n'
@@ -85,7 +85,7 @@ iobs_found = FreqDist()
 sents = corpus.sents()
 
 if args.fraction != 1.0:
-	cutoff = math.ceil(len(sents) * args.fraction)
+	cutoff = int(math.ceil(len(sents) * args.fraction))
 	sents = sents[:cutoff]
 
 for sent in sents:

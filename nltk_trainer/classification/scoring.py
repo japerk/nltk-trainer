@@ -65,7 +65,6 @@ def avg_masi_distance(multi_classifier, multi_label_feats):
 def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, informative=0):
 	if folds < 2:
 		raise ValueError('must have at least 3 folds')
-	
 	# ensure isn't an exhaustible iterable
 	instances = list(instances)
 	# randomize so get an even distribution, in case labeled instances are
@@ -84,7 +83,8 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, inform
 	
 	for f in range(folds):
 		if trace:
-			print 'fold %d' % (f+1)
+			print '\nfold %d' % (f+1)
+			print '-----%s' % ('-'*len('%s' % (f+1)))
 		
 		start = f * step
 		end = start + step
@@ -128,6 +128,8 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, inform
 			obj.show_most_informative_features(informative)
 	
 	if trace:
+		print '\nmean and variance across folds'
+		print '------------------------------'
 		print 'accuracy mean: %f' % (sum(accuracies) / folds)
 		print 'accuracy variance: %f' % array(accuracies).var()
 		

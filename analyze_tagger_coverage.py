@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import argparse, collections, math
+import argparse, collections, math, os.path
 import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
@@ -53,7 +53,15 @@ if args.metrics and not hasattr(corpus, 'tagged_sents'):
 if args.trace:
 	print 'loading tagger %s' % args.tagger
 
-tagger = nltk.data.load(args.tagger)
+try:
+	tagger = nltk.data.load(args.tagger)
+except LookupError:
+	try:
+		import cPickle as pickle
+	except ImportError:
+		import pickle
+	
+	tagger = pickle.load(open(os.path.expanduser(args.tagger)))
 
 #######################
 ## coverage analysis ##

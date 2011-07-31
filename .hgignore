@@ -3,3 +3,4 @@ syntax: glob
 *.pyc
 *~
 fabfile.py
+docs/_build

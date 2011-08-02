@@ -12,7 +12,7 @@ def dump_object(obj, fname, trace=1):
 		if trace:
 			print 'creating directory %s' % dirname
 		
-		os.mkdir(dirname)
+		os.makedirs(dirname)
 	
 	if trace:
 		print 'dumping %s to %s' % (obj.__class__.__name__, fname)

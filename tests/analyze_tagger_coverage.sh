@@ -33,12 +33,23 @@ analyzing tag coverage of corpora/treebank/tagged with ClassifierBasedPOSTagger
 }
 
 it_does_not_support_metrics() {
-	last_line=$(./analyze_chunker_coverage.py treebank --score 2>&1 | tail -n 1)
-	test "$last_line" "=" "ValueError: treebank does not support scoring"
+	last_line=$(./analyze_tagger_coverage.py movie_reviews --metrics 2>&1 | tail -n 1)
+	test "$last_line" "=" "ValueError: movie_reviews does not support metrics"
 }
 
 it_analyzes_treebank_metrics() {
 	two_lines=$(./analyze_tagger_coverage.py treebank --metrics --fraction 0.5 2>&1 | head -n 5 | tail -n 2)
+	echo "$two_lines" | grep -q "Accuracy:"
+	echo "$two_lines" | grep -q "Unknown words:"
+}
+
+it_requires_metrics_with_simplify_tags() {
+	last_line=$(./analyze_tagger_coverage.py treebank --simplify_tags 2>&1 | tail -n 1)
+	test "$last_line" "=" "ValueError: simplify_tags can only be used with the --metrics option"
+}
+
+it_analyzes_treebank_simplify_tags_metrics() {
+	two_lines=$(./analyze_tagger_coverage.py treebank --simplify_tags --metrics --fraction 0.5 2>&1 | head -n 5 | tail -n 2)
 	echo "$two_lines" | grep -q "Accuracy:"
 	echo "$two_lines" | grep -q "Unknown words:"
 }

@@ -57,9 +57,7 @@ wc = 0
 tag_counts = FreqDist()
 word_set = set()
 
-if args.corpus in ['conll2000', 'switchboard']:
-	kwargs = {}
-elif args.simplify_tags:
+if args.simplify_tags and args.corpus not in ['conll2000', 'switchboard']:
 	kwargs = {'simplify_tags': True}
 else:
 	kwargs = {}

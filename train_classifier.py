@@ -27,7 +27,7 @@ parser.add_argument('--filename', help='''filename/path for where to store the
 	~/nltk_data/classifiers''')
 parser.add_argument('--no-pickle', action='store_true', default=False,
 	help="don't pickle and save the classifier")
-parser.add_argument('--classifier', '--algorithm', default='NaiveBayes', nargs='+',
+parser.add_argument('--classifier', '--algorithm', default=['NaiveBayes'], nargs='+',
 	choices=nltk_trainer.classification.args.classifier_choices,
 	help='''Classifier algorithm to use, defaults to %(default)s. Maxent uses the
 	default Maxent training algorithm, either CG or iis.''')

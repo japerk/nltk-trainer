@@ -44,3 +44,9 @@ it_anayzes_treebank_simplified_tags() {
 12408 unique words
 31 tags"
 }
+
+it_analyzes_treebank_sort_count_reverse() {
+	two_lines=$(./analyze_tagged_corpus.py treebank --sort count --reverse 2>&1 | head -n 9 | tail -n 2)
+	test "$two_lines" "=" "NN           13166
+IN            9857"
+}

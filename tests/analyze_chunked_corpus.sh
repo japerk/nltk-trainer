@@ -38,3 +38,9 @@ it_anayzes_treebank_tagged() {
 47 tags
 1 IOBs"
 }
+
+it_analyzes_treebank_chunk_sort_count_reverse() {
+	two_lines=$(./analyze_chunked_corpus.py treebank_chunk --sort count --reverse 2>&1 | head -n 10 | tail -n 2)
+	test "$two_lines" "=" "NN           13181   12832
+IN            9970      26"
+}

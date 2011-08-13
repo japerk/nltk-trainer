@@ -89,6 +89,7 @@ if args.metrics:
 	tag_word_refs = collections.defaultdict(set)
 	tag_word_test = collections.defaultdict(set)
 	tagged_sents = corpus.tagged_sents(**kwargs)
+	taglen = 7
 	
 	if args.fraction != 1.0:
 		cutoff = int(math.ceil(len(tagged_sents) * args.fraction))
@@ -99,6 +100,9 @@ if args.metrics:
 			tags_actual.inc(tag)
 			tag_refs.append(tag)
 			tag_word_refs[tag].add(word)
+			
+			if len(tag) > taglen:
+				taglen = len(tag)
 		
 		for word, tag in tagger.tag(nltk.tag.untag(tagged_sent)):
 			tags_found.inc(tag)
@@ -111,24 +115,26 @@ if args.metrics:
 	print 'Accuracy: %f' % nltk.metrics.accuracy(tag_refs, tag_test)
 	print 'Unknown words: %d' % len(unknown_words)
 	
-	if args.trace:
+	if args.trace and unknown_words:
 		print ', '.join(sorted(unknown_words))
 	
 	print ''
-	print '  Tag      Found      Actual      Precision      Recall  '
-	print '=======  =========  ==========  =============  =========='
+	print '  '.join(['Tag'.center(taglen), 'Found'.center(9), 'Actual'.center(10),
+					'Precision'.center(13), 'Recall'.center(10)])
+	print '  '.join(['='*taglen, '='*9, '='*10, '='*13, '='*10])
 	
 	for tag in sorted(set(tags_found.keys()) | set(tags_actual.keys())):
 		found = tags_found[tag]
 		actual = tags_actual[tag]
 		precision = nltk.metrics.precision(tag_word_refs[tag], tag_word_test[tag])
 		recall = nltk.metrics.recall(tag_word_refs[tag], tag_word_test[tag])
-		print '  '.join([tag.ljust(7), str(found).rjust(9), str(actual).rjust(10),
+		print '  '.join([tag.ljust(taglen), str(found).rjust(9), str(actual).rjust(10),
 			str(precision).ljust(13)[:13], str(recall).ljust(10)[:13]])
 	
-	print '=======  =========  ==========  =============  =========='
+	print '  '.join(['='*taglen, '='*9, '='*10, '='*13, '='*10])
 else:
 	sents = corpus.sents()
+	taglen = 7
 	
 	if args.fraction != 1.0:
 		cutoff = int(math.ceil(len(sents) * args.fraction))
@@ -137,11 +143,14 @@ else:
 	for sent in sents:
 		for word, tag in tagger.tag(sent):
 			tags_found.inc(tag)
+			
+			if len(tag) > taglen:
+				taglen = len(tag)
 	
-	print '  Tag      Found  '
-	print '=======  ========='
+	print '  '.join(['Tag'.center(taglen), 'Count'.center(9)])
+	print '  '.join(['='*taglen, '='*9])
 	
 	for tag in sorted(tags_found.samples()):
-		print '  '.join([tag.ljust(7), str(tags_found[tag]).rjust(9)])
+		print '  '.join([tag.ljust(taglen), str(tags_found[tag]).rjust(9)])
 	
-	print '=======  ========='
+	print '  '.join(['='*taglen, '='*9])

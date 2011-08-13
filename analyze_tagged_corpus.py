@@ -55,6 +55,7 @@ if args.trace:
 
 wc = 0
 tag_counts = FreqDist()
+taglen = 7
 word_set = set()
 
 if args.simplify_tags and args.corpus not in ['conll2000', 'switchboard']:
@@ -63,6 +64,9 @@ else:
 	kwargs = {}
 
 for word, tag in tagged_corpus.tagged_words(fileids=args.fileids, **kwargs):
+	if len(tag) > taglen:
+		taglen = len(tag)
+	
 	if args.corpus in ['conll2000', 'switchboard'] and args.simplify_tags:
 		tag = simplify_wsj_tag(tag)
 	
@@ -85,11 +89,12 @@ elif args.sort == 'count':
 else:
 	raise ValueError('%s is not a valid sort option' % args.sort)
 
+countlen = max(len(str(tag_counts[tag_counts.max()])) + 2, 9)
 # simple reSt table format
-print '  Tag      Count  '
-print '=======  ========='
+print '  '.join(['Tag'.center(taglen), 'Count'.center(countlen)])
+print '  '.join(['='*taglen, '='*(countlen)])
 
 for tag, count in sorted(tag_counts.items(), key=sort_key, reverse=args.reverse):
-	print '  '.join([tag.ljust(7), str(count).rjust(9)])
+	print '  '.join([tag.ljust(taglen), str(count).rjust(countlen)])
 
-print '=======  ========='
+print '  '.join(['='*taglen, '='*(countlen)])

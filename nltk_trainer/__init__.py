@@ -8,7 +8,7 @@ from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
 def dump_object(obj, fname, trace=1):
 	dirname = os.path.dirname(fname)
 	
-	if not os.path.exists(dirname):
+	if dirname and not os.path.exists(dirname):
 		if trace:
 			print 'creating directory %s' % dirname
 		

@@ -129,11 +129,11 @@ if args.metrics:
 		precision = nltk.metrics.precision(tag_word_refs[tag], tag_word_test[tag])
 		recall = nltk.metrics.recall(tag_word_refs[tag], tag_word_test[tag])
 		print '  '.join([tag.ljust(taglen), str(found).rjust(9), str(actual).rjust(10),
-			str(precision).ljust(13)[:13], str(recall).ljust(10)[:13]])
+			str(precision).ljust(13)[:13], str(recall).ljust(13)[:13]])
 	
-	print '  '.join(['='*taglen, '='*9, '='*10, '='*13, '='*10])
+	print '  '.join(['='*taglen, '='*9, '='*10, '='*13, '='*13])
 else:
-	sents = corpus.sents()
+	sents = corpus.sents(**kwargs)
 	taglen = 7
 	
 	if args.fraction != 1.0:

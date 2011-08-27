@@ -120,8 +120,8 @@ if args.metrics:
 	
 	print ''
 	print '  '.join(['Tag'.center(taglen), 'Found'.center(9), 'Actual'.center(10),
-					'Precision'.center(13), 'Recall'.center(10)])
-	print '  '.join(['='*taglen, '='*9, '='*10, '='*13, '='*10])
+					'Precision'.center(13), 'Recall'.center(13)])
+	print '  '.join(['='*taglen, '='*9, '='*10, '='*13, '='*13])
 	
 	for tag in sorted(set(tags_found.keys()) | set(tags_actual.keys())):
 		found = tags_found[tag]

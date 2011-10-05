@@ -1,4 +1,5 @@
-import argparse, collections, operator, string
+#!/usr/bin/python
+import argparse, collections, itertools, operator, re, string
 import nltk.data
 from nltk.classify.util import accuracy
 from nltk.corpus import stopwords
@@ -22,9 +23,9 @@ parser.add_argument('--metrics', action='store_true', default=False,
 	help='Use classified instances to determine classifier accuracy, precision & recall')
 
 corpus_group = parser.add_argument_group('Corpus Reader Options')
-corpus_group.add_argument('--reader', default=None,
-	help='''Full module path to a corpus reader class, such as
-nltk.corpus.reader.tagged.TaggedCorpusReader''')
+corpus_group.add_argument('--reader',
+	default='nltk.corpus.reader.CategorizedPlaintextCorpusReader',
+	help='Full module path to a corpus reader class, such as %(default)s')
 corpus_group.add_argument('--fileids', default=None,
 	help='Specify fileids to load from corpus')
 corpus_group.add_argument('--cat_pattern', default='(.+)/.+',
@@ -60,21 +61,20 @@ args = parser.parse_args()
 ## corpus reader ##
 ###################
 
-reader_kwargs = {
-	'reader': args.reader,
-	'fileids': args.fileids
-}
+reader_args = []
+reader_kwargs = {}
 
 if args.cat_pattern:
-	reader_kwargs['cat_pattern'] = args.cat_pattern
+	reader_args.append(args.cat_pattern)
+	reader_kwargs['cat_pattern'] = re.compile(args.cat_pattern)
 
 if args.cat_file:
 	reader_kwargs['cat_file'] = args.cat_file
+	
+	if args.delimiter:
+		reader_kwargs['delimiter'] = args.delimiter
 
-if args.delimiter:
-	reader_kwargs['delimiter'] = args.delimiter
-
-categorized_corpus = load_corpus_reader(args.corpus, **reader_kwargs)
+categorized_corpus = load_corpus_reader(args.corpus, args.reader, *reader_args, **reader_kwargs)
 
 if args.metrics and not hasattr(categorized_corpus, 'categories'):
 	raise ValueError('%s does not support metrics' % args.corpus)
@@ -147,7 +147,7 @@ if args.metrics:
 else:
 	instance_function = {
 		'sents': categorized_corpus.sents,
-		'paras': categorized_corpus.paras
+		'paras': lambda: [itertools.chain(*para) for para in categorized_corpus.paras()]
 		# TODO: support files
 	}
 	

@@ -15,7 +15,7 @@ parser.add_argument('filename', default='~/nltk_data/classifiers/combined.pickle
 	help='Filename to pickle combined classifier, defaults to %(default)s')
 parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to 1. 0 is no trace output.')
-parser.add_argument('--hierarchy', nargs='+',
+parser.add_argument('--hierarchy', nargs='+', default=[],
 	help='''Mapping of labels to classifier pickle paths to specify a classification hierarchy, such as
 	"-h neutral:classifiers/movie_reviews.pickle"
 	''')

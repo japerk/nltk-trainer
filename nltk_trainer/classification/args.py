@@ -1,4 +1,4 @@
-from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
+from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier, megam
 from nltk_trainer.classification.multi import AvgProbClassifier
 
 classifier_choices = ['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS
@@ -59,6 +59,9 @@ def make_classifier_builder(args):
 		else:
 			if algo != 'Maxent':
 				classifier_train_kwargs['algorithm'] = algo
+				
+				if algo == 'MEGAM':
+					megam.config_megam()
 			
 			classifier_train = MaxentClassifier.train
 			classifier_train_kwargs['max_iter'] = args.max_iter

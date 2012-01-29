@@ -1,4 +1,4 @@
-import os, os.path
+import re, os, os.path
 import cPickle as pickle
 import nltk.data
 from nltk.corpus.util import LazyCorpusLoader
@@ -57,3 +57,20 @@ def load_corpus_reader(corpus, reader=None, fileids=None, **kwargs):
 		real_corpus = reader_cls(root, fileids, **kwargs)
 	
 	return real_corpus
+
+# the major punct this doesn't handle are '"- but that's probably fine
+spacepunct_re = re.compile(r'\s([%s])' % re.escape('!.,;:%?)}]'))
+punctspace_re = re.compile(r'([%s])\s' % re.escape('{([#$'))
+
+def join_words(words):
+	'''
+	>>> join_words(['Hello', ',', 'my', 'name', 'is', '.'])
+	'Hello, my name is.'
+	>>> join_words(['A', 'test', '(', 'for', 'parens', ')', '!'])
+	'A test (for parens)!'
+	'''
+	return punctspace_re.sub(r'\1', spacepunct_re.sub(r'\1', ' '.join(words)))
+
+if __name__ == '__main__':
+	import doctest
+	doctest.testmod()

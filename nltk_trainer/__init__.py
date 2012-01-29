@@ -1,7 +1,8 @@
-import re, os, os.path
+import os, os.path, re, time
 import cPickle as pickle
 import nltk.data
 from nltk.corpus.util import LazyCorpusLoader
+from nltk.misc import babelfish
 from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
 
@@ -70,6 +71,24 @@ def join_words(words):
 	'A test (for parens)!'
 	'''
 	return punctspace_re.sub(r'\1', spacepunct_re.sub(r'\1', ' '.join(words)))
+
+def translate(text, source, target, trace=1, sleep=1, retries=1):
+	try:
+		return babelfish.translate(text, source, target)
+	except babelfish.BabelizerIOError as exc:
+		if retries:
+			if trace:
+				print 'IO error in translation, trying again after %ss' % sleep
+			
+			time.sleep(sleep)
+			return translate(text, source, target, sleep, retries=retries-1)
+		else:
+			raise exc
+	except babelfish.BabelfishChangedError as exc:
+		if trace:
+			print 'error getting translation for:', text, '::', exc
+		
+		return ''
 
 if __name__ == '__main__':
 	import doctest

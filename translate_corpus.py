@@ -1,7 +1,7 @@
-import argparse, os, os.path, time
+import argparse, os, os.path
 import nltk.data
 from nltk.misc import babelfish
-from nltk_trainer import import_attr, load_corpus_reader
+from nltk_trainer import import_attr, load_corpus_reader, join_words, translate
 
 langs = [l.lower() for l in babelfish.available_languages]
 
@@ -19,7 +19,7 @@ parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to 1. 0 is no trace output.')
 parser.add_argument('--retries', default=3, type=int,
 	help='Number of babelfish retries before quiting')
-parser.add_argument('--wait', default=3, type=int,
+parser.add_argument('--sleep', default=3, type=int,
 	help='Sleep time between retries')
 
 # TODO: these are all shared with train_classifier.py and probably others, so abstract
@@ -59,24 +59,6 @@ input_corpus = load_corpus_reader(args.source_corpus, args.reader,
 ## translation ##
 #################
 
-def translate(text, tries=0):
-	try:
-		return babelfish.translate(text, args.source, args.target)
-	except babelfish.BabelizerIOError as exc:
-		if tries < args.retries:
-			if args.trace:
-				print 'IO error in translation, trying again after %ss' % args.wait
-			
-			time.sleep(args.wait)
-			return translate(text, tries=tries+1)
-		else:
-			raise exc
-	except babelfish.BabelfishChangedError as exc:
-		if args.trace:
-			print 'error getting translation for:', text, '::', exc
-		
-		return ''
-
 for fileid in input_corpus.fileids():
 	# TODO: use ~/nltk_data/corpora as dir prefix?
 	path = os.path.join(args.target_corpus, fileid)
@@ -95,9 +77,10 @@ for fileid in input_corpus.fileids():
 		for para in input_corpus.paras(fileids=[fileid]):
 			for sent in para:
 				# TODO: use intelligent joining (with punctuation)
-				text = u' '.join(sent)
+				text = join_words(sent)
 				if not text: continue
-				trans = translate(text)
+				trans = translate(text, args.source, args.corpus, trace=args.trace,
+					sleep=args.sleep, retries=args.retries)
 				if not trans: continue
 				
 				if args.trace > 1:

@@ -27,7 +27,7 @@ def import_attr(path):
 	mod = __import__(basepath, globals(), locals(), [name])
 	return getattr(mod, name)
 
-def load_corpus_reader(corpus, reader=None, fileids=None, **kwargs):
+def load_corpus_reader(corpus, reader=None, fileids=None, sent_tokenizer=None, word_tokenizer=None, **kwargs):
 	if corpus == 'timit':
 		return LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader,
 			'.+\.tags', tag_mapping_function=simplify_wsj_tag)
@@ -53,6 +53,12 @@ def load_corpus_reader(corpus, reader=None, fileids=None, **kwargs):
 				root = nltk.data.find(path)
 			except LookupError:
 				raise ValueError('cannot find corpus path for %s' % corpus)
+		
+		if sent_tokenizer and isinstance(sent_tokenizer, basestring):
+			kwargs['sent_tokenizer'] = nltk.data.load(sent_tokenizer)
+		
+		if word_tokenizer and isinstance(word_tokenizer, basestring):
+			kwargs['word_tokenizer'] = import_attr(word_tokenizer)()
 		
 		reader_cls = import_attr(reader)
 		real_corpus = reader_cls(root, fileids, **kwargs)

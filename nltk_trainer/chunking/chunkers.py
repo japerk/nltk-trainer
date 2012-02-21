@@ -1,5 +1,7 @@
 import itertools
-import nltk.chunk, nltk.tag
+import nltk.tag
+from nltk.chunk import ChunkParserI
+from nltk.chunk.util import conlltags2tree, tree2conlltags
 from nltk.tag import UnigramTagger, BigramTagger, ClassifierBasedTagger
 
 #####################
@@ -7,19 +9,18 @@ from nltk.tag import UnigramTagger, BigramTagger, ClassifierBasedTagger
 #####################
 
 def chunk_trees2train_chunks(chunk_sents):
-	tag_sents = [nltk.chunk.tree2conlltags(sent) for sent in chunk_sents]
+	tag_sents = [tree2conlltags(sent) for sent in chunk_sents]
 	return [[((w,t),c) for (w,t,c) in sent] for sent in tag_sents]
 
 def conll_tag_chunks(chunk_sents):
 	'''Convert each chunked sentence to list of (tag, chunk_tag) tuples,
 	so the final result is a list of lists of (tag, chunk_tag) tuples.
-	>>> import nltk.chunk
 	>>> from nltk.tree import Tree
 	>>> t = Tree('S', [Tree('NP', [('the', 'DT'), ('book', 'NN')])])
 	>>> conll_tag_chunks([t])
 	[[('DT', 'B-NP'), ('NN', 'I-NP')]]
 	'''
-	tagged_sents = [nltk.chunk.tree2conlltags(tree) for tree in chunk_sents]
+	tagged_sents = [tree2conlltags(tree) for tree in chunk_sents]
 	return [[(t, c) for (w, t, c) in sent] for sent in tagged_sents]
 
 def ieertree2conlltags(tree, tag=nltk.tag.pos_tag):
@@ -52,7 +53,7 @@ def ieertree2conlltags(tree, tag=nltk.tag.pos_tag):
 ## tag chunker ##
 #################
 
-class TagChunker(nltk.chunk.ChunkParserI):
+class TagChunker(ChunkParserI):
 	'''Chunks tagged tokens using Ngram Tagging.'''
 	def __init__(self, train_chunks, tagger_classes=[UnigramTagger, BigramTagger]):
 		'''Train Ngram taggers on chunked sentences'''
@@ -69,7 +70,7 @@ class TagChunker(nltk.chunk.ChunkParserI):
 		chunks = self.tagger.tag(tags)
 		# create conll str for tree parsing
 		wtc = itertools.izip(words, chunks)
-		return nltk.chunk.conlltags2tree([(w,t,c) for (w,(t,c)) in wtc])
+		return conlltags2tree([(w,t,c) for (w,(t,c)) in wtc])
 
 ########################
 ## classifier chunker ##
@@ -101,7 +102,7 @@ def prev_next_pos_iob(tokens, index, history):
 	
 	return feats
 
-class ClassifierChunker(nltk.chunk.ChunkParserI):
+class ClassifierChunker(ChunkParserI):
 	def __init__(self, train_sents, feature_detector=prev_next_pos_iob, **kwargs):
 		if not feature_detector:
 			feature_detector = self.feature_detector
@@ -113,4 +114,4 @@ class ClassifierChunker(nltk.chunk.ChunkParserI):
 	def parse(self, tagged_sent):
 		if not tagged_sent: return None
 		chunks = self.tagger.tag(tagged_sent)
-		return nltk.chunk.conlltags2tree([(w,t,c) for ((w,t),c) in chunks])
+		return conlltags2tree([(w,t,c) for ((w,t),c) in chunks])

@@ -68,6 +68,12 @@ args = parser.parse_args()
 
 source_corpus = load_corpus_reader(args.source_corpus, args.reader)
 
+if not source_corpus:
+	raise ValueError('%s is an unknown corpus')
+
+if args.trace:
+	print 'loaded %s' % args.source_corpus
+
 ########################
 ## text normalization ##
 ########################

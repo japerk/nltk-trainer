@@ -85,6 +85,8 @@ def add_sklearn_args(parser):
 		help='smoothing parameter for naive bayes classifiers, default is %(default)s')
 	sklearn_group.add_argument('--C', type=float, default=1.0,
 		help='penalty parameter, default is %(default)s')
+	sklearn_group.add_argument('--criterion', choices=['gini', 'entropy'],
+		default='gini', help='Split quality function, default is %(default)s')
 	sklearn_group.add_argument('--kernel', default='rbf',
 		choices=['linear', 'poly', 'rbf', 'sigmoid', 'precomputed'],
 		help='kernel type for support vector machine classifiers, default is %(default)s')
@@ -100,8 +102,6 @@ def add_sklearn_args(parser):
 		default='l2', help='norm for penalization, default is %(default)s')
 	sklearn_group.add_argument('--tfidf', default=False, action='store_true',
 		help='Use TfidfTransformer')
-	sklearn_group.add_argument('--criterion', choices=['gini', 'entropy'],
-		default='gini', help='Split quality function, default is %(default)s')
 
 # for mapping existing args to sklearn args
 sklearn_keys = {

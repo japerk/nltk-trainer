@@ -99,8 +99,10 @@ def add_sklearn_args(parser):
 	sklearn_group.add_argument('--penalty', choices=['l1', 'l2'],
 		default='l2', help='norm for penalization, default is %(default)s')
 	sklearn_group.add_argument('--tfidf', default=False, action='store_true',
-		help='Use TfidfTransformer')sklearn_group.add_argument('--criterion', choices=['gini', 'entropy'],
+		help='Use TfidfTransformer')
+	sklearn_group.add_argument('--criterion', choices=['gini', 'entropy'],
 		default='gini', help='Split quality function, default is %(default)s')
+
 # for mapping existing args to sklearn args
 sklearn_keys = {
 	'max_feats': 'max_features',

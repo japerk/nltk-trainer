@@ -8,6 +8,13 @@ dense_classifiers = set(['ExtraTreesClassifier', 'GradientBoostingClassifier',
 verbose_classifiers = set(['RandomForestClassifier', 'SVC'])
 
 try:
+	import svmlight # do this first since svm module makes ugly errors
+	from nltk.classify.svm import SvmClassifier
+	classifier_choices.append('Svm')
+except:
+	pass
+
+try:
 	from nltk.classify import scikitlearn
 	from sklearn.feature_extraction.text import TfidfTransformer
 	from sklearn.pipeline import Pipeline
@@ -149,6 +156,8 @@ def make_classifier_builder(args):
 			classifier_train_kwargs['verbose'] = args.trace
 		elif algo == 'NaiveBayes':
 			classifier_train = NaiveBayesClassifier.train
+		elif algo == 'Svm':
+			classifier_train = SvmClassifier.train
 		elif algo.startswith('sklearn.'):
 			# TODO: support many options for building an estimator pipeline
 			pipe = [('classifier', make_sklearn_classifier(algo, args))]

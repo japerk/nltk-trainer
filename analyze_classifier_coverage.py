@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import argparse, collections, itertools, operator, re, string
+import cPickle as pickle
 import nltk.data
 from nltk.classify.util import accuracy
 from nltk.corpus import stopwords
@@ -113,7 +114,10 @@ def norm_words(words):
 ## text extraction ##
 #####################
 
-classifier = nltk.data.load(args.classifier)
+try:
+	classifier = nltk.data.load(args.classifier)
+except LookupError:
+	classifier = pickle.load(open(args.classifier))
 
 if args.metrics:
 	label_instance_function = {

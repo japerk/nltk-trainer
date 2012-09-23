@@ -4,10 +4,30 @@ from nltk_trainer.classification.multi import AvgProbClassifier
 classifier_choices = ['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS
 
 try:
-	from .sci import ScikitsClassifier
-	classifier_choices.append('Scikits')
-except ImportError:
-	pass
+	from nltk.classify import scikitlearn
+	from sklearn.pipeline import Pipeline
+	from sklearn import linear_model, naive_bayes, neighbors, svm, tree
+	
+	classifiers = [
+		linear_model.LogisticRegression,
+		#linear_model.SGDClassifier, # NOTE: this seems terrible, but could just be the options
+		naive_bayes.BernoulliNB,
+		#naive_bayes.GaussianNB, # TODO: requires a dense matrix
+		naive_bayes.MultinomialNB,
+		neighbors.KNeighborsClassifier, # TODO: options for nearest neighbors
+		svm.LinearSVC,
+		svm.NuSVC,
+		svm.SVC,
+		#tree.DecisionTreeClassifier, # TODO: requires a dense matrix
+	]
+	sklearn_classifiers = {}
+	
+	for classifier in classifiers:
+		sklearn_classifiers[classifier.__name__] = classifier
+	
+	classifier_choices.extend(sorted(['sklearn.%s' % c.__name__ for c in classifiers]))
+except ImportError as exc:
+	sklearn_classifiers = {}
 
 def add_maxent_args(parser):
 	maxent_group = parser.add_argument_group('Maxent Classifier',
@@ -29,6 +49,53 @@ def add_decision_tree_args(parser):
 		help='default is 100')
 	decisiontree_group.add_argument('--support_cutoff', default=10, type=int,
 		help='default is 10')
+
+sklearn_kwargs = {}
+
+def add_sklearn_args(parser):
+	if not sklearn_classifiers: return
+	
+	sklearn_group = parser.add_argument_group('sklearn Classifiers',
+		'These options are common to many of the sklearn classification algorithms.')
+	sklearn_group.add_argument('--alpha', type=float, default=1.0,
+		help='smoothing parameter for naive bayes classifiers, default is %(default)s')
+	sklearn_group.add_argument('--C', type=float, default=1.0,
+		help='penalty parameter, default is %(default)s')
+	sklearn_group.add_argument('--penalty', choices=['l1', 'l2'],
+		default='l2', help='norm for penalization, default is %(default)s')
+	sklearn_group.add_argument('--kernel', default='rbf',
+		choices=['linear', 'poly', 'rbf', 'sigmoid', 'precomputed'],
+		help='kernel type for support vector machine classifiers, default is %(default)s')
+	
+	sklearn_kwargs['LogisticRegression'] = ['C','penalty']
+	sklearn_kwargs['BernoulliNB'] = ['alpha']
+	sklearn_kwargs['MultinomialNB'] = ['alpha']
+	sklearn_kwargs['SVC'] = ['C', 'kernel']
+	
+	linear_svc_group = parser.add_argument_group('sklearn Linear Support Vector Machine Classifier',
+		'These options only apply when a sklearn.LinearSVC classifier is chosen.')
+	linear_svc_group.add_argument('--loss', choices=['l1', 'l2'],
+		default='l2', help='loss function, default is %(default)s')
+	sklearn_kwargs['LinearSVC'] = ['C', 'loss', 'penalty']
+	
+	nu_svc_group = parser.add_argument_group('sklearn Nu Support Vector Machine Classifier',
+		'These options only apply when a sklearn.NuSVC classifier is chosen.')
+	nu_svc_group.add_argument('--nu', type=float, default=0.5,
+		help='upper bound on fraction of training errors & lower bound on fraction of support vectors, default is %(default)s')
+	sklearn_kwargs['NuSVC'] = ['nu', 'kernel']
+
+def make_sklearn_classifier(algo, args):
+	name = algo.split('.', 1)[1]
+	kwargs = {}
+	
+	for key in sklearn_kwargs.get(name, []):
+		val = getattr(args, key)
+		if val is not None: kwargs[key] = val
+	
+	if args.trace and kwargs:
+		print 'training %s with %s' % (algo, kwargs)
+	
+	return sklearn_classifiers[name](**kwargs)
 
 def make_classifier_builder(args):
 	if isinstance(args.classifier, basestring):
@@ -54,8 +121,11 @@ def make_classifier_builder(args):
 			classifier_train_kwargs['verbose'] = args.trace
 		elif algo == 'NaiveBayes':
 			classifier_train = NaiveBayesClassifier.train
-		elif algo == 'Scikits':
-			classifier_train = ScikitsClassifier.train
+		elif algo.startswith('sklearn.'):
+			# TODO: support many options for building an estimator pipeline
+			estimator = Pipeline([('classifier', make_sklearn_classifier(algo, args))])
+			# TODO: option for dtype
+			classifier_train = scikitlearn.SklearnClassifier(estimator, dtype=bool).train
 		else:
 			if algo != 'Maxent':
 				classifier_train_kwargs['algorithm'] = algo

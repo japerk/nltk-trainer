@@ -122,6 +122,7 @@ eval_group.add_argument('--cross-fold', type=int, default=0,
 
 nltk_trainer.classification.args.add_maxent_args(parser)
 nltk_trainer.classification.args.add_decision_tree_args(parser)
+nltk_trainer.classification.args.add_sklearn_args(parser)
 
 args = parser.parse_args()
 

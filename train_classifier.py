@@ -12,7 +12,8 @@ from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk.util import ngrams
 from nltk_trainer import dump_object, import_attr, load_corpus_reader
 from nltk_trainer.classification import corpus, scoring
-from nltk_trainer.classification.featx import bag_of_words, bag_of_words_in_set, train_test_feats
+from nltk_trainer.classification.featx import (bag_of_words, bag_of_words_in_set,
+	word_counts, train_test_feats)
 from nltk_trainer.classification.multi import MultiBinaryClassifier
 
 ########################################
@@ -87,6 +88,9 @@ feat_group.add_argument('--filter-stopwords', default='no',
 	help='language stopwords to filter, defaults to "no" to keep stopwords')
 feat_group.add_argument('--punctuation', action='store_true', default=False,
 	help="don't strip punctuation")
+feat_group.add_argument('--value-type', default='bool', choices=('bool', 'int'),
+	help='''Data type of values in featuresets. The default is bool, which ignores word counts.
+	Use int to get word and/or ngram counts.''')
 
 score_group = parser.add_argument_group('Feature Scoring',
 	'The default is no scoring, all words are included as features')
@@ -226,12 +230,32 @@ if args.min_score or args.max_feats:
 		ws = ws[:args.max_feats]
 	
 	bestwords = set([w for (w, s) in ws])
-	featx = lambda words: bag_of_words_in_set(words, bestwords)
+	
+	if args.value_type == 'bool':
+		if args.trace:
+			print 'using bag of words from known set feature extraction'
+		
+		featx = lambda words: bag_of_words_in_set(words, bestwords)
+	elif args.value_type == 'int':
+		if args.trace:
+			print 'using word counts from known set feature extraction'
+		
+		featx = lambda words: word_counts_in_set(words, bestwords)
 	
 	if args.trace:
 		print '%d words meet min_score and/or max_feats' % len(bestwords)
-else:
+elif args.value_type == 'bool':
+	if args.trace:
+		print 'using bag of words feature extraction'
+	
 	featx = bag_of_words
+elif args.value_type == 'int':
+	if args.trace:
+		print 'using word counts feature extraction'
+	
+	featx = word_counts
+else:
+	raise ValueError('unknown value type %s' % args.value_type)
 
 #####################
 ## text extraction ##

@@ -172,8 +172,15 @@ def make_classifier_builder(args):
 			
 			if not sparse and args.trace:
 				print 'using dense matrix'
-			# TODO: option for dtype
-			classifier_train = scikitlearn.SklearnClassifier(Pipeline(pipe), dtype=bool, sparse=sparse).train
+			
+			if args.value_type == 'bool':
+				dtype = bool
+			elif args.value_type == 'int':
+				dtype = int
+			else:
+				dtype = float
+			
+			classifier_train = scikitlearn.SklearnClassifier(Pipeline(pipe), dtype=dtype, sparse=sparse).train
 		else:
 			if algo != 'Maxent':
 				classifier_train_kwargs['algorithm'] = algo

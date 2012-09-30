@@ -52,6 +52,9 @@ If you also have `scikit-learn <http://scikit-learn.org/>`_ then the following c
 	* `sklearn.SVC <http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC>`_
 	* `sklearn.DecisionTreeClassifier <http://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier>`_
 
+For example, here's how you to use the ``sklearn.LinearSVC`` classifier with the ``movie_reviews`` corpus:
+	``python train_classifier.py movie_reviews --classifier sklearn.LinearSVC``
+
 For a complete list of usage options:
 	``python train_classifier.py --help``
 

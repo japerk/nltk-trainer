@@ -173,12 +173,15 @@ def make_classifier_builder(args):
 			if not sparse and args.trace:
 				print 'using dense matrix'
 			
-			if args.value_type == 'bool':
+			if args.value_type == 'bool' and not args.tfidf:
 				dtype = bool
-			elif args.value_type == 'int':
+			elif args.value_type == 'int' and not args.tfidf:
 				dtype = int
 			else:
 				dtype = float
+			
+			if args.trace:
+				print 'using dtype %s' % dtype.__name__
 			
 			classifier_train = scikitlearn.SklearnClassifier(Pipeline(pipe), dtype=dtype, sparse=sparse).train
 		else:

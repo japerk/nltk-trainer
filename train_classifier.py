@@ -79,7 +79,7 @@ classifier_group.add_argument('--multi', action='store_true', default=False,
 
 feat_group = parser.add_argument_group('Feature Extraction',
 	'The default is to lowercase every word, strip punctuation, and use stopwords')
-feat_group.add_argument('--ngrams', action='append', type=int,
+feat_group.add_argument('--ngrams', nargs='+', type=int,
 	help='use n-grams as features.')
 feat_group.add_argument('--no-lowercase', action='store_true', default=False,
 	help="don't lowercase every word")
@@ -88,7 +88,7 @@ feat_group.add_argument('--filter-stopwords', default='no',
 	help='language stopwords to filter, defaults to "no" to keep stopwords')
 feat_group.add_argument('--punctuation', action='store_true', default=False,
 	help="don't strip punctuation")
-feat_group.add_argument('--value-type', default='bool', choices=('bool', 'int'),
+feat_group.add_argument('--value-type', default='bool', choices=('bool', 'int', 'float'),
 	help='''Data type of values in featuresets. The default is bool, which ignores word counts.
 	Use int to get word and/or ngram counts.''')
 
@@ -236,7 +236,7 @@ if args.min_score or args.max_feats:
 			print 'using bag of words from known set feature extraction'
 		
 		featx = lambda words: bag_of_words_in_set(words, bestwords)
-	elif args.value_type == 'int':
+	else:
 		if args.trace:
 			print 'using word counts from known set feature extraction'
 		
@@ -249,13 +249,11 @@ elif args.value_type == 'bool':
 		print 'using bag of words feature extraction'
 	
 	featx = bag_of_words
-elif args.value_type == 'int':
+else:
 	if args.trace:
 		print 'using word counts feature extraction'
 	
 	featx = word_counts
-else:
-	raise ValueError('unknown value type %s' % args.value_type)
 
 #####################
 ## text extraction ##

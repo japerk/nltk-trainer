@@ -9,7 +9,7 @@ setup(
 	packages=['nltk_trainer'],
 	version='0.9',
 	description='Train NLTK objects with 0 code',
-	long_description=open_file('README.txt').read(),
+	long_description=open_file('README.rst').read(),
 	license='Apache',
 	author='Jacob Perkins',
 	author_email='japerk@gmail.com',

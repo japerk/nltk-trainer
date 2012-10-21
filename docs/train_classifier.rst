@@ -62,7 +62,7 @@ For a complete list of usage options:
 Using a Trained Classifier
 --------------------------
 
-You can use a trained classifier by loading the pickle file using `nltk.data.load <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.data-module.html#load>`_:
+You can use a trained classifier by loading the pickle file using `nltk.data.load <http://nltk.org/api/nltk.html#nltk.data.load>`_:
 	>>> import nltk.data
 	>>> classifier = nltk.data.load("classifiers/NAME_OF_CLASSIFIER.pickle")
 
@@ -70,14 +70,14 @@ Or if your classifier pickle file is not in a ``nltk_data`` subdirectory, you ca
 	>>> import pickle
 	>>> classifier = pickle.load(open("/path/to/NAME_OF_CLASSIFIER.pickle"))
 
-Either method will return an object that supports the `ClassifierI interface <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.classify.api.ClassifierI-class.html>`_. 
+Either method will return an object that supports the `ClassifierI interface <http://nltk.org/api/nltk.classify.html#nltk.classify.api.ClassifierI>`_. 
 
 Once you have a ``classifier`` object, you can use it to classify word features with the ``classifier.classify(feats)`` method, which returns a label:
 	>>> words = ['some', 'words', 'in', 'a', 'sentence']
 	>>> feats = dict([(word, True) for word in words])
 	>>> classifier.classify(feats)
 
-If you used the ``--ngrams`` option with values greater than 1, you should include these ngrams in the dictionary using `nltk.util.ngrams(words, n) <http://nltk.googlecode.com/svn/trunk/doc/api/nltk.util-module.html#ngrams>`_:
+If you used the ``--ngrams`` option with values greater than 1, you should include these ngrams in the dictionary using `nltk.util.ngrams(words, n) <http://nltk.org/api/nltk.html#nltk.util.ngrams>`_:
 	>>> from nltk.util import ngrams
 	>>> words = ['some', 'words', 'in', 'a', 'sentence']
 	>>> feats = dict([(word, True) for word in words + ngrams(words, n)])

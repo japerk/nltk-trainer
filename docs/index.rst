@@ -24,6 +24,15 @@ Documentation
    analyze_tagged_corpus.rst
    analyze_tagger_coverage.rst
 
+Articles
+========
+
+- `Training Binary Classifiers with NLTK Trainer <http://streamhacker.com/2010/10/25/training-binary-text-classifiers-nltk-trainer/>`_
+- `Training Part of Speech Taggers with NLTK Trainer <http://streamhacker.com/2011/03/21/training-part-speech-taggers-nltk-trainer/>`_
+- `Analyzing Tagger Corpora and NLTK Part of Speech Taggers <http://streamhacker.com/2011/03/23/analyzing-tagged-corpora-nltk-part-speech-taggers/>`_
+- `NLTK Default Tagger Coverage of treebank corpus <http://streamhacker.com/2011/01/24/nltk-default-tagger-treebank-tag-coverage/>`_
+- `NLTK Default Tagger Coverage of conll2000 corpus <http://streamhacker.com/2011/01/25/nltk-default-tagger-conll2000-tag-coverage/>`_
+
 Indices and tables
 ==================
 

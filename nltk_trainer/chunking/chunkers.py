@@ -115,3 +115,18 @@ class ClassifierChunker(ChunkParserI):
 		if not tagged_sent: return None
 		chunks = self.tagger.tag(tagged_sent)
 		return conlltags2tree([(w,t,c) for ((w,t),c) in chunks])
+
+#############
+## pattern ##
+#############
+
+class PatternChunker(ChunkParserI):
+	def parse(self, tagged_sent):
+		# don't import at top since don't want to fail if not installed
+		from pattern.en import parse
+		s = ' '.join([word for word, tag in tagged_sent])
+		# not tokenizing ensures that the number of tagged tokens returned is
+		# the same as the number of input tokens
+		sents = parse(s, tokenize=False).split()
+		if not sents: return None
+		return conlltags2tree([(w, t, c) for w, t, c, p in sents[0]])

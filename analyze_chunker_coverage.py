@@ -4,7 +4,9 @@ import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
 from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer import load_corpus_reader
+from nltk_trainer import load_corpus_reader, load_model
+from nltk_trainer.chunking import chunkers
+from nltk_trainer.tagging import taggers
 
 ########################################
 ## command options & argument parsing ##
@@ -55,12 +57,18 @@ if args.score and not hasattr(corpus, 'chunked_sents'):
 if args.trace:
 	print 'loading tagger %s' % args.tagger
 
-tagger = nltk.data.load(args.tagger)
+if args.tagger == 'pattern':
+	tagger = taggers.PatternTagger()
+else:
+	tagger = load_model(args.tagger)
 
 if args.trace:
 	print 'loading chunker %s' % args.chunker
 
-chunker = nltk.data.load(args.chunker)
+if args.chunker == 'pattern':
+	chunker = chunkers.PatternChunker()
+else:
+	chunker = load_model(args.chunker)
 
 #######################
 ## coverage analysis ##

@@ -49,7 +49,7 @@ class MaxVoteBackoffTagger(SequentialBackoffTagger):
 class PatternTagger(TaggerI):
 	def tag(self, tokens):
 		# don't import at top since don't want to fail if not installed
-		from pattern.en import parse
-		# we don't want chunk tags, and not tokenizing ensures that the number
-		# of tagged tokens returned is the same as the number of input tokens
-		return [str2tuple(s) for s in parse(u' '.join(tokens), chunks=False, tokenize=False).split(u' ')]
+		from pattern.en import tag
+		# not tokenizing ensures that the number of tagged tokens returned is
+		# the same as the number of input tokens
+		return tag(u' '.join(tokens), tokenize=False)

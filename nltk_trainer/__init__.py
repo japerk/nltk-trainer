@@ -1,10 +1,14 @@
 import os, os.path, re, time
-import cPickle as pickle
 import nltk.data
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.misc import babelfish
 from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
+
+try:
+	import cPickle as pickle
+except ImportError:
+	import pickle
 
 def dump_object(obj, fname, trace=1):
 	dirname = os.path.dirname(fname)
@@ -21,6 +25,12 @@ def dump_object(obj, fname, trace=1):
 	f = open(fname, 'wb')
 	pickle.dump(obj, f)
 	f.close()
+
+def load_model(path):
+	try:
+		return nltk.data.load(path)
+	except LookupError:
+		return pickle.load(open(os.path.expanduser(path)))
 
 def import_attr(path):
 	basepath, name = path.rsplit('.', 1)

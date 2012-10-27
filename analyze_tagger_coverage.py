@@ -4,7 +4,8 @@ import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
 from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer import load_corpus_reader
+from nltk_trainer import load_corpus_reader, load_model
+from nltk_trainer.tagging import taggers
 
 ########################################
 ## command options & argument parsing ##
@@ -62,15 +63,10 @@ if args.metrics and not hasattr(corpus, 'tagged_sents'):
 if args.trace:
 	print 'loading tagger %s' % args.tagger
 
-try:
-	tagger = nltk.data.load(args.tagger)
-except LookupError:
-	try:
-		import cPickle as pickle
-	except ImportError:
-		import pickle
-	
-	tagger = pickle.load(open(os.path.expanduser(args.tagger)))
+if args.tagger == 'pattern':
+	tagger = taggers.PatternTagger()
+else:
+	tagger = load_model(args.tagger)
 
 #######################
 ## coverage analysis ##

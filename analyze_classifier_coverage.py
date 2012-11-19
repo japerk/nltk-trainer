@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import argparse, collections, itertools, operator, re, string
+import argparse, collections, itertools, operator, re, string, time
 import cPickle as pickle
 import nltk.data
 from nltk.classify.util import accuracy
@@ -22,6 +22,8 @@ parser.add_argument('--trace', default=1, type=int,
 	help='How much trace output you want, defaults to 1. 0 is no trace output.')
 parser.add_argument('--metrics', action='store_true', default=False,
 	help='Use classified instances to determine classifier accuracy, precision & recall')
+parser.add_argument('--speed', action='store_true', default=False,
+	help='Determine average instance classification speed.')
 
 corpus_group = parser.add_argument_group('Corpus Reader Options')
 corpus_group.add_argument('--reader',
@@ -114,10 +116,17 @@ def norm_words(words):
 ## text extraction ##
 #####################
 
+if args.speed:
+	load_start = time.time()
+
 try:
 	classifier = nltk.data.load(args.classifier)
 except LookupError:
 	classifier = pickle.load(open(args.classifier))
+
+if args.speed:
+	load_secs = time.time() - load_start
+	print 'loading time: %dsecs' % load_secs
 
 if args.metrics:
 	label_instance_function = {
@@ -161,9 +170,20 @@ else:
 
 label_counts = collections.defaultdict(int)
 
+if args.speed:
+	time_start = time.time()
+
 for feat in feats:
 	label = classifier.classify(feat)
 	label_counts[label] += 1
 
+if args.speed:
+	time_end = time.time()
+
 for label in sorted(label_counts.keys()):
 	print label, label_counts[label]
+
+if args.speed:
+	secs = (time_end - time_start)
+	nfeats = len(feats)
+	print 'average time per classify: %dsecs / %d feats = %f ms/feat' % (secs, nfeats, (float(secs) / nfeats) * 1000)

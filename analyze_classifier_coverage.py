@@ -48,7 +48,7 @@ corpus_group.add_argument('--fraction', default=1.0, type=float,
 
 feat_group = parser.add_argument_group('Feature Extraction',
 	'The default is to lowercase every word, strip punctuation, and use stopwords')
-feat_group.add_argument('--ngrams', action='append', type=int,
+feat_group.add_argument('--ngrams', nargs='+', type=int,
 	help='use n-grams as features.')
 feat_group.add_argument('--no-lowercase', action='store_true', default=False,
 	help="don't lowercase every word")
@@ -158,15 +158,18 @@ if args.metrics:
 		print '%s recall: %f' % (label, recall(ref, test) or 0)
 		print '%s f-measure: %f' % (label, f_measure(ref, test) or 0)
 else:
-	instance_function = {
-		'sents': categorized_corpus.sents,
-		'paras': lambda: [itertools.chain(*para) for para in categorized_corpus.paras()]
-		# TODO: support files
-	}
+	if args.instances == 'sents':
+		texts = categorized_corpus.sents()
+		total = len(texts)
+	elif args.instances == 'paras':
+		texts = (itertools.chain(*para) for para in categorized_corpus.paras())
+		total = len(categorized_corpus.paras)
+	elif args.instances == 'files':
+		texts = (categorized_corpus.words(fileids=[fid]) for fid in categorized_corpus.fileids())
+		total = len(categorized_corpus.fileids())
 	
-	texts = instance_function[args.instances]()
-	stop = int(len(texts)*args.fraction)
-	feats = [bag_of_words(norm_words(i)) for i in texts[:stop]]
+	stop = int(total * args.fraction)
+	feats = (bag_of_words(norm_words(i)) for i in itertools.islice(texts, stop))
 
 label_counts = collections.defaultdict(int)
 
@@ -185,5 +188,5 @@ for label in sorted(label_counts.keys()):
 
 if args.speed:
 	secs = (time_end - time_start)
-	nfeats = len(feats)
+	nfeats = sum(label_counts.values())
 	print 'average time per classify: %dsecs / %d feats = %f ms/feat' % (secs, nfeats, (float(secs) / nfeats) * 1000)

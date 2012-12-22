@@ -140,10 +140,16 @@ if args.metrics:
 	test_feats = []
 	
 	for label in labels:
-		texts = list(lif(categorized_corpus, label))
-		stop = int(len(texts)*args.fraction)
+		texts = lif(categorized_corpus, label)
 		
-		for t in texts[:stop]:
+		if args.instances == 'files':
+			# don't get list(texts) here since might have tons of files
+			stop = int(len(categorized_corpus.fileids())*args.fraction)
+		else:
+			texts = list(texts)
+			stop = int(len(texts)*args.fraction)
+		
+		for t in itertools.islice(texts, stop):
 			feat = bag_of_words(norm_words(t))
 			feats.append(feat)
 			test_feats.append((feat, label))
@@ -163,7 +169,7 @@ else:
 		total = len(texts)
 	elif args.instances == 'paras':
 		texts = (itertools.chain(*para) for para in categorized_corpus.paras())
-		total = len(categorized_corpus.paras)
+		total = len(categorized_corpus.paras())
 	elif args.instances == 'files':
 		texts = (categorized_corpus.words(fileids=[fid]) for fid in categorized_corpus.fileids())
 		total = len(categorized_corpus.fileids())

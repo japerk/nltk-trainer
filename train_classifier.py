@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import argparse, collections, itertools, math, os.path, re, string, operator
 import nltk.data
 import nltk_trainer.classification.args

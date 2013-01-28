@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse, itertools, operator, os, os.path, string
 import nltk.data
 from nltk.corpus import stopwords

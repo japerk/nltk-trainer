@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import argparse, os.path
 import nltk.data
 from nltk_trainer import dump_object

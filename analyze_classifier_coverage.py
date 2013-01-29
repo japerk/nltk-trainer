@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import argparse, collections, itertools, operator, re, string, time
 import cPickle as pickle
 import nltk.data

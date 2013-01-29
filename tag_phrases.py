@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse, os.path
 import cPickle as pickle
 import nltk.data, nltk.tag

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse, os, os.path
 import nltk.data
 from nltk.misc import babelfish

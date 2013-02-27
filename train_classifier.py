@@ -204,7 +204,10 @@ def norm_words(words):
 	
 	if stopset:
 		words = [w for w in words if w.lower() not in stopset]
-
+	# in case nothing has happened to words, ensure is a list so can add together
+	if not isinstance(words, list):
+		words = list(words)
+	
 	if args.ngrams:
 		return reduce(operator.add, [words if n == 1 else ngrams(words, n) for n in args.ngrams])
 	else:

@@ -4,31 +4,31 @@ Training Classifiers
 Example usage with the movie_reviews corpus can be found in `Training Binary Text Classifiers with NLTK Trainer <http://streamhacker.com/2010/10/25/training-binary-text-classifiers-nltk-trainer/>`_.
 
 Train a binary NaiveBayes classifier on the movie_reviews corpus, using paragraphs as the training instances:
-	``python train_classifier.py --instances paras --classifier NaiveBayes movie_reviews``
+	``python train_classifier.py movie_reviews --instances paras --classifier NaiveBayes``
 
 Include bigrams as features:
-	``python train_classifier.py --instances paras --classifier NaiveBayes --ngrams 1 --ngrams 2 movie_reviews``
+	``python train_classifier.py movie_reviews --instances paras --classifier NaiveBayes --ngrams 1 --ngrams 2``
 
 Minimum score threshold:
-	``python train_classifier.py --instances paras --classifier NaiveBayes --ngrams 1 --ngrams 2 --min_score 3 movie_reviews``
+	``python train_classifier.py movie_reviews --instances paras --classifier NaiveBayes --ngrams 1 --ngrams 2 --min_score 3``
 
 Maximum number of features:
-	``python train_classifier.py --instances paras --classifier NaiveBayes --ngrams 1 --ngrams 2 --max_feats 1000 movie_reviews``
+	``python train_classifier.py movie_reviews --instances paras --classifier NaiveBayes --ngrams 1 --ngrams 2 --max_feats 1000``
 
 Use the default Maxent algorithm:
-	``python train_classifier.py --instances paras --classifier Maxent movie_reviews``
+	``python train_classifier.py movie_reviews --instances paras --classifier Maxent``
 
 Use the MEGAM Maxent algorithm:
-	``python train_classifier.py --instances paras --classifier MEGAM movie_reviews``
+	``python train_classifier.py movie_reviews --instances paras --classifier MEGAM``
 
 Train on files instead of paragraphs:
-	``python train_classifier.py --instances files --classifier MEGAM movie_reviews``
+	``python train_classifier.py movie_reviews --instances files --classifier MEGAM``
 
 Train on sentences:
-	``python train_classifier.py --instances sents --classifier MEGAM movie_reviews``
+	``python train_classifier.py movie_reviews --instances sents --classifier MEGAM``
 
 Evaluate the classifier by training on 3/4 of the paragraphs and testing against the remaing 1/4, without pickling:
-	``python train_classifier.py --instances paras --classifier NaiveBayes --fraction 0.75 --no-pickle movie_reviews``
+	``python train_classifier.py movie_reviews --instances paras --classifier NaiveBayes --fraction 0.75 --no-pickle``
 
 The following classifiers are available:
 

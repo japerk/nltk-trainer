@@ -66,6 +66,8 @@ corpus_group.add_argument('--test-prefix', default=None,
 corpus_group.add_argument('--word-tokenizer', default='', help='Word Tokenizer class path')
 corpus_group.add_argument('--sent-tokenizer', default='', help='Sent Tokenizer data.pickle path')
 corpus_group.add_argument('--para-block-reader', default='', help='Block reader function path')
+corpus_group.add_argument('--labels', default=[],
+	help='''If given a list of labels, default categories by corpus are omitted''')
 
 classifier_group = parser.add_argument_group('Classifier Type',
 	'''A binary classifier has only 2 labels, and is the default classifier type.
@@ -169,7 +171,10 @@ categorized_corpus = load_corpus_reader(args.corpus, args.reader,
 if not hasattr(categorized_corpus, 'categories'):
 	raise ValueError('%s is does not have categories for classification')
 
-labels = categorized_corpus.categories()
+if len(args.labels) > 0:
+	labels = args.labels.split(",")
+else:
+	labels = categorized_corpus.categories()
 nlabels = len(labels)
 
 if args.trace:

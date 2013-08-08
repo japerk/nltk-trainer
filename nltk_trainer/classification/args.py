@@ -121,7 +121,7 @@ def make_sklearn_classifier(algo, args):
 	kwargs = {}
 	
 	for key in sklearn_kwargs.get(name, []):
-		val = getattr(args, key)
+		val = getattr(args, key, None)
 		if val: kwargs[sklearn_keys.get(key, key)] = val
 	
 	if args.trace and kwargs:
@@ -161,21 +161,25 @@ def make_classifier_builder(args):
 		elif algo.startswith('sklearn.'):
 			# TODO: support many options for building an estimator pipeline
 			pipe = [('classifier', make_sklearn_classifier(algo, args))]
+			tfidf = getattr(args, 'tfidf', None)
+			penalty = getattr(args, 'penalty', None)
 			
-			if args.tfidf:
+			if tfidf and penalty:
 				if args.trace:
-					print 'using tfidf transformer with norm %s' % args.penalty
+					print 'using tfidf transformer with norm %s' % penalty
 				
-				pipe.insert(0, ('tfidf', TfidfTransformer(norm=args.penalty)))
+				pipe.insert(0, ('tfidf', TfidfTransformer(norm=penalty)))
 			
 			sparse = pipe[-1][1].__class__.__name__ not in dense_classifiers
 			
 			if not sparse and args.trace:
 				print 'using dense matrix'
 			
-			if args.value_type == 'bool' and not args.tfidf:
+			value_type = getattr(args, 'value_type', 'bool')
+			
+			if value_type == 'bool' and not tfidf:
 				dtype = bool
-			elif args.value_type == 'int' and not args.tfidf:
+			elif value_type == 'int' and not tfidf:
 				dtype = int
 			else:
 				dtype = float

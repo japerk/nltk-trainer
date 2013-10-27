@@ -216,6 +216,45 @@ def norm_words(words):
 	else:
 		return words
 
+
+#####################
+## text extraction ##
+#####################
+def split_list(lis, fraction):
+	if fraction != 1.0:
+		l = len(lis)
+		cutoff = int(math.ceil(l * fraction))
+		return lis[0:cutoff], lis[cutoff:]
+	else:
+		return lis, []
+
+if args.multi and args.binary:
+	label_instance_function = {
+		'sents': corpus.multi_category_sent_words,
+		'paras': corpus.multi_category_para_words,
+		'files': corpus.multi_category_file_words
+	}
+	
+	lif = label_instance_function[args.instances]
+	train_instances = lif(categorized_corpus, args.train_prefix)
+	test_instances = lif(categorized_corpus, args.test_prefix)
+	train_feats = [(featx(norm_words(words)), cats) for words, cats in train_instances]
+	test_feats = [(featx(norm_words(words)), cats) for words, cats in test_instances]
+else:
+	label_instance_function = {
+		'sents': corpus.category_sent_words,
+		'paras': corpus.category_para_words,
+		'files': corpus.category_file_words
+	}
+	
+	lif = label_instance_function[args.instances]
+	ltrain_instances = {}
+	ltest_instances = {}
+	for label in labels:
+		instances = (norm_words(i) for i in lif(categorized_corpus, label))
+		instances = [i for i in instances if i]
+		ltrain_instances[label], ltest_instances[label] = split_list(instances, args.fraction)
+
 ##################
 ## word scoring ##
 ##################
@@ -226,7 +265,9 @@ if args.min_score or args.max_feats:
 	if args.trace:
 		print 'calculating word scores'
 	
-	cat_words = [(cat, norm_words(words)) for cat, words in corpus.category_words(categorized_corpus)]
+	# flatten the list of instances to a single iteration of all the words 
+	cat_words = [(cat, (word for i in instances for word in i)) for cat, instances in ltrain_instances.iteritems()]
+				
 	ws = scoring.sorted_word_scores(scoring.sum_category_word_scores(cat_words, score_fn))
 	
 	if args.min_score:
@@ -261,51 +302,23 @@ else:
 	
 	featx = word_counts
 
-#####################
-## text extraction ##
-#####################
+		
+#########################
+## extracting features ##
+#########################
 
-if args.multi and args.binary:
-	label_instance_function = {
-		'sents': corpus.multi_category_sent_words,
-		'paras': corpus.multi_category_para_words,
-		'files': corpus.multi_category_file_words
-	}
-	
-	lif = label_instance_function[args.instances]
-	train_instances = lif(categorized_corpus, args.train_prefix)
-	test_instances = lif(categorized_corpus, args.test_prefix)
-	train_feats = [(featx(norm_words(words)), cats) for words, cats in train_instances]
-	test_feats = [(featx(norm_words(words)), cats) for words, cats in test_instances]
-else:
-	label_instance_function = {
-		'sents': corpus.category_sent_words,
-		'paras': corpus.category_para_words,
-		'files': corpus.category_file_words
-	}
-	
-	lif = label_instance_function[args.instances]
-	label_instances = {}
-	
-	for label in labels:
-		instances = [norm_words(i) for i in lif(categorized_corpus, label)]
-		label_instances[label] = [i for i in instances if i]
-	
-	train_feats = []
-	test_feats = []
-	
+train_feats = []
+test_feats = []
+for feats, label_instances in ((train_feats, ltrain_instances), (test_feats, ltest_instances)):
 	for label, instances in label_instances.iteritems():
-		ltrain_feats, ltest_feats = train_test_feats(label, instances, featx=featx, fraction=args.fraction)
-		
-		if args.trace > 1:
-			info = (label, len(ltrain_feats), len(ltest_feats))
-			print '%s: %d training instances, %d testing instances' % info
-		
-		train_feats.extend(ltrain_feats)
-		test_feats.extend(ltest_feats)
+		feats.extend([(featx(i), label) for i in instances])
+# if there were no instances reserved for testing, test over the whole training set
+if not test_feats:
+	test_feats = train_feats
+if args.trace > 1:
+	info = (label, len(train_feats), len(test_feats))
+	print '%s: %d training instances, %d testing instances' % info
 	
-if args.trace:
-	print '%d training feats, %d testing feats' % (len(train_feats), len(test_feats))
 
 ##############
 ## training ##

@@ -201,15 +201,16 @@ if not args.punctuation:
 
 def norm_words(words):
 	if not args.no_lowercase:
-		words = [w.lower() for w in words]
+		words = (w.lower() for w in words)
 	
 	if not args.punctuation:
-		words = [w.strip(string.punctuation) for w in words]
-		words = [w for w in words if w]
+		words = (w.strip(string.punctuation) for w in words)
+		words = (w for w in words if w)
 	
 	if stopset:
-		words = [w for w in words if w.lower() not in stopset]
-	# in case nothing has happened to words, ensure is a list so can add together
+		words = (w for w in words if w.lower() not in stopset)
+	
+	# in case we modified words in a generator, ensure it's a list so we can add together
 	if not isinstance(words, list):
 		words = list(words)
 	

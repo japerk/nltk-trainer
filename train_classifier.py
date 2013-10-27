@@ -196,9 +196,6 @@ if args.filter_stopwords == 'no':
 else:
 	stopset = set(stopwords.words(args.filter_stopwords))
 
-if not args.punctuation:
-	stopset |= set(string.punctuation)
-
 def norm_words(words):
 	if not args.no_lowercase:
 		words = (w.lower() for w in words)

@@ -254,6 +254,9 @@ else:
 		instances = (norm_words(i) for i in lif(categorized_corpus, label))
 		instances = [i for i in instances if i]
 		ltrain_instances[label], ltest_instances[label] = split_list(instances, args.fraction)
+		if args.trace > 1:
+			info = (label, len(ltrain_instances[label]), len(ltest_instances[label]))
+			print '%s: %d training instances, %d testing instances' % info
 
 ##################
 ## word scoring ##
@@ -315,10 +318,9 @@ for feats, label_instances in ((train_feats, ltrain_instances), (test_feats, lte
 # if there were no instances reserved for testing, test over the whole training set
 if not test_feats:
 	test_feats = train_feats
-if args.trace > 1:
-	info = (label, len(train_feats), len(test_feats))
-	print '%s: %d training instances, %d testing instances' % info
-	
+
+if args.trace:
+       print '%d training feats, %d testing feats' % (len(train_feats), len(test_feats))
 
 ##############
 ## training ##

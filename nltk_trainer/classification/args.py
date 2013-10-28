@@ -68,7 +68,7 @@ def add_decision_tree_args(parser):
 sklearn_kwargs = {
 	# ensemble
 	'ExtraTreesClassifier': ['criterion', 'max_feats', 'depth_cutoff', 'n_estimators'],
-	'GradientBoostingClassifier': ['learn_rate', 'max_feats', 'depth_cutoff', 'n_estimators'],
+	'GradientBoostingClassifier': ['learning_rate', 'max_feats', 'depth_cutoff', 'n_estimators'],
 	'RandomForestClassifier': ['criterion', 'max_feats', 'depth_cutoff', 'n_estimators'],
 	# linear_model
 	'LogisticRegression': ['C','penalty'],
@@ -97,7 +97,7 @@ def add_sklearn_args(parser):
 	sklearn_group.add_argument('--kernel', default='rbf',
 		choices=['linear', 'poly', 'rbf', 'sigmoid', 'precomputed'],
 		help='kernel type for support vector machine classifiers, default is %(default)s')
-	sklearn_group.add_argument('--learn_rate', type=float, default=0.1,
+	sklearn_group.add_argument('--learning_rate', type=float, default=0.1,
 		help='learning rate, default is %(default)s')
 	sklearn_group.add_argument('--loss', choices=['l1', 'l2'],
 		default='l2', help='loss function, default is %(default)s')

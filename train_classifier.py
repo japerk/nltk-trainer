@@ -95,7 +95,9 @@ def word_normalizer(args):
 #####################
 ## text extraction ##
 #####################
-def extract_text_multi(categorized_corpus, norm_words, args):
+def extract_text_multi(categorized_corpus, args, norm_words=None):
+	if not norm_words:
+		norm_words = word_normalizer(args)
 	label_instance_function = {
 		'sents': corpus.multi_category_sent_words,
 		'paras': corpus.multi_category_para_words,
@@ -121,7 +123,10 @@ def split_list(lis, fraction):
 	else:
 		return lis, []
 
-def extract_text(categorized_corpus, labels, norm_words, args):
+def extract_text(categorized_corpus, labels, args, norm_words=None):
+	if not norm_words:
+		norm_words = word_normalizer(args)
+		
 	label_instance_function = {
 		'sents': corpus.category_sent_words,
 		'paras': corpus.category_para_words,
@@ -157,7 +162,7 @@ def get_featx(train_instances, args, cat_words=cat_words_from_instances):
 	##################
 	## word scoring ##
 	##################
-	score_fn = getattr(BigramAssocMeasures, args.score_fn)
+	score_fn = args.score_fn and getattr(BigramAssocMeasures, args.score_fn) or None
 
 	if args.min_score or args.max_feats:
 		if args.trace:
@@ -208,6 +213,10 @@ def extract_features(label_instances, featx):
 	if isinstance(label_instances, dict):
 		feats = []
 		for label, instances in label_instances.iteritems():
+#			for i in instances:
+#				ifeat = featx(i)
+#				if ifeat:
+#					feats.append((ifeat,label))
 			feats.extend([(featx(i), label) for i in instances])
 	else:
 		feats = [(featx(i), label) for i, label in label_instances ]
@@ -415,11 +424,11 @@ if __name__ == '__main__':
 		raise ValueError('corpus must have more than 2 categories if --multi is specified')
 	
 	if args.multi and args.binary:
-		train_instances, test_instances = extract_text_multi(categorized_corpus, word_normalizer(args), args)
+		train_instances, test_instances = extract_text_multi(categorized_corpus, args)
 		featx = get_featx(train_instances, args,
 						  cat_words=cat_words_from_instances_multi)
 	else:
-		train_instances, test_instances = extract_text(categorized_corpus, labels, word_normalizer(args), args)
+		train_instances, test_instances = extract_text(categorized_corpus, labels, args)
 		featx = get_featx(train_instances, args)
 		
 		

@@ -360,31 +360,32 @@ if args.trace:
 ##############
 ## training ##
 ##############
-
 trainf = nltk_trainer.classification.args.make_classifier_builder(args)
+
+if args.cross_fold:
+	if args.multi and args.binary:
+		raise NotImplementedError ("cross-fold is not supported for multi-binary classifiers")
+	scoring.cross_fold(train_feats, trainf, accuracy, folds=args.cross_fold,
+		trace=args.trace, metrics=not args.no_eval, informative=args.show_most_informative)
+	sys.exit(0)
 
 if args.multi and args.binary:
 	if args.trace:
 		print 'training multi-binary %s classifier' % args.classifier
-	
 	classifier = MultiBinaryClassifier.train(labels, train_feats, trainf)
-elif args.cross_fold:
-	scoring.cross_fold(train_feats, trainf, accuracy, folds=args.cross_fold,
-		trace=args.trace, metrics=not args.no_eval, informative=args.show_most_informative)
 else:
 	classifier = trainf(train_feats)
 
 ################
 ## evaluation ##
 ################
-
-if not args.no_eval and not args.cross_fold:
+if not args.no_eval:
 	if not args.no_accuracy:
 		try:
 			print 'accuracy: %f' % accuracy(classifier, test_feats)
 		except ZeroDivisionError:
 			print 'accuracy: 0'
-	
+
 	if args.multi and args.binary and not args.no_masi_distance:
 		print 'average masi distance: %f' % (scoring.avg_masi_distance(classifier, test_feats))
 	
@@ -414,8 +415,7 @@ if args.show_most_informative and hasattr(classifier, 'show_most_informative_fea
 ##############
 ## pickling ##
 ##############
-
-if not args.no_pickle and not args.cross_fold:
+if not args.no_pickle:
 	if args.filename:
 		fname = os.path.expanduser(args.filename)
 	else:

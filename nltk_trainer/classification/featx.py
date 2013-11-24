@@ -8,7 +8,7 @@ def bag_of_words_in_set(words, wordset):
 	return bag_of_words(set(words) & wordset)
 
 def word_counts(words):
-	return dict(probability.FreqDist((w, 1) for w in words))
+	return dict(probability.FreqDist((w for w in words)))
 
 def word_counts_in_set(words, wordset):
 	return word_counts((w for w in words if w in wordset))

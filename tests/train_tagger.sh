@@ -26,8 +26,8 @@ it_trains_treebank() {
 3914 tagged sents, training on 1957
 training AffixTagger with affix -3 and backoff <DefaultTagger: tag=-None->
 training <class 'nltk.tag.sequential.UnigramTagger'> tagger with backoff <AffixTagger: size=2026>
-training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=3251>
-training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=1265>"
+training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=3265>
+training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=1276>"
 }
 
 it_trains_corpora_treebank_tagged() {
@@ -35,8 +35,8 @@ it_trains_corpora_treebank_tagged() {
 51002 tagged sents, training on 25501
 training AffixTagger with affix -3 and backoff <DefaultTagger: tag=-None->
 training <class 'nltk.tag.sequential.UnigramTagger'> tagger with backoff <AffixTagger: size=1810>
-training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=3212>
-training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=1161>"
+training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=3222>
+training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=1158>"
 }
 
 it_trains_ub() {
@@ -61,5 +61,5 @@ it_trains_treebank_simplify_tags() {
 training AffixTagger with affix -3 and backoff <DefaultTagger: tag=-None->
 training <class 'nltk.tag.sequential.UnigramTagger'> tagger with backoff <AffixTagger: size=2026>
 training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=3177>
-training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=1065>"
+training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=1077>"
 }

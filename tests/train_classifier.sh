@@ -19,6 +19,7 @@ it_cannot_import_reader() {
 it_trains_movie_reviews_paras() {
 	test "$(./train_classifier.py movie_reviews --no-pickle --no-eval --fraction 0.5 --instances paras)" "=" "loading movie_reviews
 2 labels: ['neg', 'pos']
+using bag of words feature extraction
 1000 training feats, 1000 testing feats
 training NaiveBayes classifier"
 }
@@ -26,6 +27,7 @@ training NaiveBayes classifier"
 it_trains_corpora_movie_reviews_paras() {
 	test "$(./train_classifier.py corpora/movie_reviews --no-pickle --no-eval --fraction 0.5 --instances paras)" "=" "loading corpora/movie_reviews
 2 labels: ['neg', 'pos']
+using bag of words feature extraction
 1000 training feats, 1000 testing feats
 training NaiveBayes classifier"	
 }
@@ -38,6 +40,7 @@ it_cross_fold_validates() {
 it_trains_movie_reviews_sents() {
 	test "$(./train_classifier.py movie_reviews --no-pickle --no-eval --fraction 0.5 --instances sents)" "=" "loading movie_reviews
 2 labels: ['neg', 'pos']
+using bag of words feature extraction
 33880 training feats, 33878 testing feats
 training NaiveBayes classifier"
 }
@@ -48,9 +51,10 @@ it_trains_movie_reviews_maxent() {
 }
 
 it_shows_most_informative() {
-	first_lines=$(./train_classifier.py movie_reviews --show-most-informative 5 --no-pickle --no-eval --fraction 0.5 | head -n 6)
+	first_lines=$(./train_classifier.py movie_reviews --show-most-informative 5 --no-pickle --no-eval --fraction 0.5 | head -n 7)
 	test "$first_lines" "=" "loading movie_reviews
 2 labels: ['neg', 'pos']
+using bag of words feature extraction
 1000 training feats, 1000 testing feats
 training NaiveBayes classifier
 5 most informative features

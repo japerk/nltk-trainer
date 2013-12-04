@@ -51,7 +51,7 @@ it_trains_movie_reviews_maxent() {
 }
 
 it_shows_most_informative() {
-	first_lines=$(./train_classifier.py movie_reviews --show-most-informative 5 --no-pickle --no-eval --fraction 0.5 | head -n 6)
+	first_lines=$(./train_classifier.py movie_reviews --show-most-informative 5 --no-pickle --no-eval --fraction 0.5 | head -n 7)
 	test "$first_lines" "=" "loading movie_reviews
 2 labels: ['neg', 'pos']
 using bag of words feature extraction
@@ -59,4 +59,9 @@ using bag of words feature extraction
 training NaiveBayes classifier
 5 most informative features
 Most Informative Features"
+}
+
+it_passes_parameters_to_gradient_boosting_classifier() {
+	classifier_line=$(./train_classifier.py movie_reviews --classifier sklearn.GradientBoostingClassifier --no-pickle --no-eval --n_estimators 3 --learning_rate 0.9 --depth_cutoff 2 --trace 2 | grep GradientBoostingClassifier | head -n 1)
+	test "$classifier_line" "=" "training sklearn.GradientBoostingClassifier with {'n_estimators': 3, 'learning_rate': 0.9, 'max_depth': 2}" 
 }

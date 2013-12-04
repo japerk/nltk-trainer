@@ -15,6 +15,7 @@ from nltk_trainer.classification import corpus, scoring
 from nltk_trainer.classification.featx import (bag_of_words, bag_of_words_in_set,
 	word_counts, train_test_feats, word_counts_in_set)
 from nltk_trainer.classification.multi import MultiBinaryClassifier
+import sys
 
 ########################################
 ## command options & argument parsing ##

@@ -65,3 +65,22 @@ it_passes_parameters_to_gradient_boosting_classifier() {
 	classifier_line=$(./train_classifier.py movie_reviews --classifier sklearn.GradientBoostingClassifier --no-pickle --no-eval --n_estimators 3 --learning_rate 0.9 --depth_cutoff 2 --trace 2 | grep GradientBoostingClassifier | head -n 1)
 	test "$classifier_line" "=" "training sklearn.GradientBoostingClassifier with {'n_estimators': 3, 'learning_rate': 0.9, 'max_depth': 2}" 
 }
+
+it_trains_with_word_count() {
+	test "$(./train_classifier.py movie_reviews --no-pickle --no-eval --fraction 0.5 --value-type int)" "=" "loading movie_reviews
+2 labels: ['neg', 'pos']
+using word counts feature extraction
+1000 training feats, 1000 testing feats
+training NaiveBayes classifier"
+}
+		
+it_trains_with_max_feats() {
+	test "$(./train_classifier.py movie_reviews --no-pickle --no-eval --fraction 0.5 --max_feats 100)" "=" "loading movie_reviews
+2 labels: ['neg', 'pos']
+calculating word scores
+using bag of words from known set feature extraction
+100 words meet min_score and/or max_feats
+1000 training feats, 1000 testing feats
+training NaiveBayes classifier"
+}
+

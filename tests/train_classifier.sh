@@ -84,3 +84,33 @@ using bag of words from known set feature extraction
 training NaiveBayes classifier"
 }
 
+it_trains_multi_binary() {
+	test "$(./train_classifier.py problem_reports --cat_pattern '([a-z]*)' --instances sents --multi --binary --no-pickle | sed 's/[01]\.[0-9][0-9]*/<pct>/g')" "=" "loading problem_reports
+5 labels: ['apache', 'eclipse', 'firefox', 'linux', 'openoffice']
+using bag of words feature extraction
+371 training feats, 371 testing feats
+training multi-binary ['NaiveBayes'] classifier
+training NaiveBayes classifier
+training NaiveBayes classifier
+training NaiveBayes classifier
+training NaiveBayes classifier
+training NaiveBayes classifier
+accuracy: <pct>
+average masi distance: <pct>
+apache precision: <pct>
+apache recall: <pct>
+apache f-measure: <pct>
+eclipse precision: <pct>
+eclipse recall: <pct>
+eclipse f-measure: <pct>
+firefox precision: <pct>
+firefox recall: <pct>
+firefox f-measure: <pct>
+linux precision: <pct>
+linux recall: <pct>
+linux f-measure: <pct>
+openoffice precision: <pct>
+openoffice recall: <pct>
+openoffice f-measure: <pct>"
+}
+

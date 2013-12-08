@@ -4,7 +4,7 @@ import nltk.corpus
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
 #from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer import load_corpus_reader
+from nltk_trainer import basestring, load_corpus_reader
 
 ########################################
 ## command options & argument parsing ##

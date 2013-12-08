@@ -1,4 +1,5 @@
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier, megam
+from nltk_trainer import basestring
 from nltk_trainer.classification.multi import AvgProbClassifier
 
 classifier_choices = ['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS

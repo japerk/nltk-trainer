@@ -10,6 +10,17 @@ try:
 except ImportError:
 	import pickle
 
+try:
+	from nltk.compat import iteritems
+except ImportError:
+	def iteritems(d):
+		return d.iteritems()
+
+try:
+	basestring
+except NameError:
+	basestring = unicode = str
+
 def dump_object(obj, fname, trace=1):
 	dirname = os.path.dirname(fname)
 	

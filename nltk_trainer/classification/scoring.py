@@ -2,6 +2,7 @@ import collections, random
 from numpy import array
 from nltk.metrics import masi_distance, f_measure, precision, recall
 from nltk.probability import FreqDist, ConditionalFreqDist
+from nltk_trainer import iteritems
 
 def sum_category_word_scores(categorized_words, score_fn):
 	word_fd = FreqDist()
@@ -18,7 +19,7 @@ def sum_category_word_scores(categorized_words, score_fn):
 	for category in category_word_fd.conditions():
 		n_xi = category_word_fd[category].N()
 		
-		for word, n_ii in category_word_fd[category].iteritems():
+		for word, n_ii in iteritems(category_word_fd[category]):
 			n_ix = word_fd[word]
 			scores[word] += score_fn(n_ii, (n_ix, n_xi), n_xx)
 	
@@ -133,15 +134,15 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, inform
 		print('accuracy mean: %f' % (sum(accuracies) / folds))
 		print('accuracy variance: %f' % array(accuracies).var())
 		
-		for key, ps in precisions.iteritems():
+		for key, ps in iteritems(precisions):
 			print('%s precision mean: %f' % (key, sum(ps) / folds))
 			print('%s precision variance: %f' % (key, array(ps).var()))
 		
-		for key, rs in recalls.iteritems():
+		for key, rs in iteritems(recalls):
 			print('%s recall mean: %f' % (key, sum(rs) / folds))
 			print('%s recall variance: %f' % (key, array(rs).var()))
 		
-		for key, fs in f_measures.iteritems():
+		for key, fs in iteritems(f_measures):
 			print('%s f_measure mean: %f' % (key, sum(fs) / folds))
 			print('%s f_measure variance: %f' % (key, array(fs).var()))
 	

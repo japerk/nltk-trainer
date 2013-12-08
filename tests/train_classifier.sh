@@ -60,3 +60,57 @@ training NaiveBayes classifier
 5 most informative features
 Most Informative Features"
 }
+
+it_passes_parameters_to_gradient_boosting_classifier() {
+	classifier_line=$(./train_classifier.py movie_reviews --classifier sklearn.GradientBoostingClassifier --no-pickle --no-eval --n_estimators 3 --learning_rate 0.9 --depth_cutoff 2 --trace 2 | grep GradientBoostingClassifier | head -n 1)
+	test "$classifier_line" "=" "training sklearn.GradientBoostingClassifier with {'n_estimators': 3, 'learning_rate': 0.9, 'max_depth': 2}" 
+}
+
+it_trains_with_word_count() {
+	test "$(./train_classifier.py movie_reviews --no-pickle --no-eval --fraction 0.5 --value-type int)" "=" "loading movie_reviews
+2 labels: ['neg', 'pos']
+using word counts feature extraction
+1000 training feats, 1000 testing feats
+training NaiveBayes classifier"
+}
+		
+it_trains_with_max_feats() {
+	test "$(./train_classifier.py movie_reviews --no-pickle --no-eval --fraction 0.5 --max_feats 100)" "=" "loading movie_reviews
+2 labels: ['neg', 'pos']
+calculating word scores
+using bag of words from known set feature extraction
+100 words meet min_score and/or max_feats
+1000 training feats, 1000 testing feats
+training NaiveBayes classifier"
+}
+
+it_trains_multi_binary() {
+	test "$(./train_classifier.py problem_reports --cat_pattern '([a-z]*)' --instances sents --multi --binary --no-pickle | sed 's/[01]\.[0-9][0-9]*/<pct>/g')" "=" "loading problem_reports
+5 labels: ['apache', 'eclipse', 'firefox', 'linux', 'openoffice']
+using bag of words feature extraction
+371 training feats, 371 testing feats
+training multi-binary ['NaiveBayes'] classifier
+training NaiveBayes classifier
+training NaiveBayes classifier
+training NaiveBayes classifier
+training NaiveBayes classifier
+training NaiveBayes classifier
+accuracy: <pct>
+average masi distance: <pct>
+apache precision: <pct>
+apache recall: <pct>
+apache f-measure: <pct>
+eclipse precision: <pct>
+eclipse recall: <pct>
+eclipse f-measure: <pct>
+firefox precision: <pct>
+firefox recall: <pct>
+firefox f-measure: <pct>
+linux precision: <pct>
+linux recall: <pct>
+linux f-measure: <pct>
+openoffice precision: <pct>
+openoffice recall: <pct>
+openoffice f-measure: <pct>"
+}
+

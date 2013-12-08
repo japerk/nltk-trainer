@@ -126,7 +126,7 @@ except LookupError:
 
 if args.speed:
 	load_secs = time.time() - load_start
-	print 'loading time: %dsecs' % load_secs
+	print('loading time: %dsecs' % load_secs)
 
 if args.metrics:
 	label_instance_function = {
@@ -154,15 +154,15 @@ if args.metrics:
 			feats.append(feat)
 			test_feats.append((feat, label))
 	
-	print 'accuracy:', accuracy(classifier, test_feats)
+	print('accuracy:', accuracy(classifier, test_feats))
 	refsets, testsets = scoring.ref_test_sets(classifier, test_feats)
 	
 	for label in labels:
 		ref = refsets[label]
 		test = testsets[label]
-		print '%s precision: %f' % (label, precision(ref, test) or 0)
-		print '%s recall: %f' % (label, recall(ref, test) or 0)
-		print '%s f-measure: %f' % (label, f_measure(ref, test) or 0)
+		print('%s precision: %f' % (label, precision(ref, test) or 0))
+		print('%s recall: %f' % (label, recall(ref, test) or 0))
+		print('%s f-measure: %f' % (label, f_measure(ref, test) or 0))
 else:
 	if args.instances == 'sents':
 		texts = categorized_corpus.sents()
@@ -190,9 +190,9 @@ if args.speed:
 	time_end = time.time()
 
 for label in sorted(label_counts.keys()):
-	print label, label_counts[label]
+	print(label, label_counts[label])
 
 if args.speed:
 	secs = (time_end - time_start)
 	nfeats = sum(label_counts.values())
-	print 'average time per classify: %dsecs / %d feats = %f ms/feat' % (secs, nfeats, (float(secs) / nfeats) * 1000)
+	print('average time per classify: %dsecs / %d feats = %f ms/feat' % (secs, nfeats, (float(secs) / nfeats) * 1000))

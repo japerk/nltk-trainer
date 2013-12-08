@@ -55,7 +55,7 @@ if args.score and not hasattr(corpus, 'chunked_sents'):
 ############
 
 if args.trace:
-	print 'loading tagger %s' % args.tagger
+	print('loading tagger %s' % args.tagger)
 
 if args.tagger == 'pattern':
 	tagger = taggers.PatternTagger()
@@ -63,7 +63,7 @@ else:
 	tagger = load_model(args.tagger)
 
 if args.trace:
-	print 'loading chunker %s' % args.chunker
+	print('loading chunker %s' % args.chunker)
 
 if args.chunker == 'pattern':
 	chunker = chunkers.PatternChunker()
@@ -76,7 +76,7 @@ else:
 
 if args.score:
 	if args.trace:
-		print 'evaluating chunker score\n'
+		print('evaluating chunker score\n')
 	
 	chunked_sents = corpus.chunked_sents()
 	
@@ -84,10 +84,10 @@ if args.score:
 		cutoff = int(math.ceil(len(chunked_sents) * args.fraction))
 		chunked_sents = chunked_sents[:cutoff]
 	
-	print chunker.evaluate(chunked_sents), '\n'
+	print(chunker.evaluate(chunked_sents), '\n')
 
 if args.trace:
-	print 'analyzing chunker coverage of %s with %s\n' % (args.corpus, chunker.__class__.__name__)
+	print('analyzing chunker coverage of %s with %s\n' % (args.corpus, chunker.__class__.__name__))
 
 iobs_found = FreqDist()
 sents = corpus.sents()
@@ -105,10 +105,10 @@ for sent in sents:
 iobs = iobs_found.samples()
 justify = max(7, *[len(iob) for iob in iobs])
 
-print 'IOB'.center(justify) + '    Found  '
-print '='*justify + '  ========='
+print('IOB'.center(justify) + '    Found  ')
+print('='*justify + '  =========')
 
 for iob in sorted(iobs):
-	print '  '.join([iob.ljust(justify), str(iobs_found[iob]).rjust(9)])
+	print('  '.join([iob.ljust(justify), str(iobs_found[iob]).rjust(9)]))
 
-print '='*justify + '  ========='
+print('='*justify + '  =========')

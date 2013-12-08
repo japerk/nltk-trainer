@@ -15,12 +15,12 @@ def dump_object(obj, fname, trace=1):
 	
 	if dirname and not os.path.exists(dirname):
 		if trace:
-			print 'creating directory %s' % dirname
+			print('creating directory %s' % dirname)
 		
 		os.makedirs(dirname)
 	
 	if trace:
-		print 'dumping %s to %s' % (obj.__class__.__name__, fname)
+		print('dumping %s to %s' % (obj.__class__.__name__, fname))
 	
 	f = open(fname, 'wb')
 	pickle.dump(obj, f)
@@ -94,7 +94,7 @@ def translate(text, source, target, trace=1, sleep=1, retries=1):
 	except babelfish.BabelizerIOError as exc:
 		if retries:
 			if trace:
-				print 'IO error in translation, trying again after %ss' % sleep
+				print('IO error in translation, trying again after %ss' % sleep)
 			
 			time.sleep(sleep)
 			return translate(text, source, target, sleep, retries=retries-1)
@@ -102,7 +102,7 @@ def translate(text, source, target, trace=1, sleep=1, retries=1):
 			raise exc
 	except babelfish.BabelfishChangedError as exc:
 		if trace:
-			print 'error getting translation for:', text, '::', exc
+			print('error getting translation for:', text, '::', exc)
 		
 		return ''
 

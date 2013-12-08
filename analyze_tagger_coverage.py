@@ -61,7 +61,7 @@ if args.metrics and not hasattr(corpus, 'tagged_sents'):
 ############
 
 if args.trace:
-	print 'loading tagger %s' % args.tagger
+	print('loading tagger %s' % args.tagger)
 
 if args.tagger == 'pattern':
 	tagger = taggers.PatternTagger()
@@ -73,7 +73,7 @@ else:
 #######################
 
 if args.trace:
-	print 'analyzing tag coverage of %s with %s\n' % (args.corpus, tagger.__class__.__name__)
+	print('analyzing tag coverage of %s with %s\n' % (args.corpus, tagger.__class__.__name__))
 
 tags_found = FreqDist()
 unknown_words = set()
@@ -108,26 +108,26 @@ if args.metrics:
 			if tag == '-NONE-':
 				unknown_words.add(word)
 	
-	print 'Accuracy: %f' % nltk.metrics.accuracy(tag_refs, tag_test)
-	print 'Unknown words: %d' % len(unknown_words)
+	print('Accuracy: %f' % nltk.metrics.accuracy(tag_refs, tag_test))
+	print('Unknown words: %d' % len(unknown_words))
 	
 	if args.trace and unknown_words:
-		print ', '.join(sorted(unknown_words))
+		print(', '.join(sorted(unknown_words)))
 	
-	print ''
-	print '  '.join(['Tag'.center(taglen), 'Found'.center(9), 'Actual'.center(10),
+	print('')
+	print('  '.join(['Tag'.center(taglen), 'Found'.center(9), 'Actual'.center(10),)
 					'Precision'.center(13), 'Recall'.center(13)])
-	print '  '.join(['='*taglen, '='*9, '='*10, '='*13, '='*13])
+	print('  '.join(['='*taglen, '='*9, '='*10, '='*13, '='*13]))
 	
 	for tag in sorted(set(tags_found.keys()) | set(tags_actual.keys())):
 		found = tags_found[tag]
 		actual = tags_actual[tag]
 		precision = nltk.metrics.precision(tag_word_refs[tag], tag_word_test[tag])
 		recall = nltk.metrics.recall(tag_word_refs[tag], tag_word_test[tag])
-		print '  '.join([tag.ljust(taglen), str(found).rjust(9), str(actual).rjust(10),
+		print('  '.join([tag.ljust(taglen), str(found).rjust(9), str(actual).rjust(10),)
 			str(precision).ljust(13)[:13], str(recall).ljust(13)[:13]])
 	
-	print '  '.join(['='*taglen, '='*9, '='*10, '='*13, '='*13])
+	print('  '.join(['='*taglen, '='*9, '='*10, '='*13, '='*13]))
 else:
 	sents = corpus.sents(**kwargs)
 	taglen = 7
@@ -143,10 +143,10 @@ else:
 			if len(tag) > taglen:
 				taglen = len(tag)
 	
-	print '  '.join(['Tag'.center(taglen), 'Count'.center(9)])
-	print '  '.join(['='*taglen, '='*9])
+	print('  '.join(['Tag'.center(taglen), 'Count'.center(9)]))
+	print('  '.join(['='*taglen, '='*9]))
 	
 	for tag in sorted(tags_found.samples()):
-		print '  '.join([tag.ljust(taglen), str(tags_found[tag]).rjust(9)])
+		print('  '.join([tag.ljust(taglen), str(tags_found[tag]).rjust(9)]))
 	
-	print '  '.join(['='*taglen, '='*9])
+	print('  '.join(['='*taglen, '='*9]))

@@ -13,7 +13,7 @@ class CorpusWriter(object):
 			
 			if not os.path.exists(dirpath):
 				if trace:
-					print 'making directory %s' % dirpath
+					print('making directory %s' % dirpath)
 				
 				os.makedirs(dirpath)
 		
@@ -32,7 +32,7 @@ class CorpusWriter(object):
 	def open(self):
 		for fileid in self.fileids:
 			if self.trace:
-				print 'opening %s' % fileid
+				print('opening %s' % fileid)
 			
 			self.get_file(fileid)
 		
@@ -41,7 +41,7 @@ class CorpusWriter(object):
 	def close(self, *args, **kwargs):
 		for fileid, f in self.files.items():
 			if self.trace:
-				print 'closing %s' % fileid
+				print('closing %s' % fileid)
 			
 			f.close()
 			del self.files[fileid]

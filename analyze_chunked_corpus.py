@@ -46,7 +46,7 @@ if not chunked_corpus:
 	raise ValueError('%s is an unknown corpus')
 
 if args.trace:
-	print 'loading %s' % args.corpus
+	print('loading %s' % args.corpus)
 
 ##############
 ## counting ##
@@ -77,10 +77,10 @@ for obj in chunked_corpus.chunked_words():
 ## output ##
 ############
 
-print '%d total words' % wc
-print '%d unique words' % len(word_set)
-print '%d tags' % len(tag_counts)
-print '%d IOBs\n' % len(iob_counts)
+print('%d total words' % wc)
+print('%d unique words' % len(word_set))
+print('%d tags' % len(tag_counts))
+print('%d IOBs\n' % len(iob_counts))
 
 if args.sort == 'tag':
 	sort_key = lambda (t, c): t
@@ -98,11 +98,11 @@ for iob in iobs:
 	line1 += '    %s  ' % iob
 	line2 += '  ==%s==' % ('=' * len(iob))
 
-print line1
-print line2
+print(line1)
+print(line2)
 
 for tag, count in sorted(tag_counts.items(), key=sort_key, reverse=args.reverse):
 	iob_counts = [str(tag_iob_counts[tag][iob]).rjust(4+len(iob)) for iob in iobs]
-	print '  '.join([tag.ljust(7), str(count).rjust(9)] + iob_counts)
+	print('  '.join([tag.ljust(7), str(count).rjust(9)] + iob_counts))
 
-print line2
+print(line2)

@@ -47,7 +47,7 @@ if not tagged_corpus:
 	raise ValueError('%s is an unknown corpus')
 
 if args.trace:
-	print 'loading %s' % args.corpus
+	print('loading %s' % args.corpus)
 
 ##############
 ## counting ##
@@ -80,7 +80,7 @@ for word, tag in tagged_corpus.tagged_words(fileids=args.fileids, **kwargs):
 ## output ##
 ############
 
-print '%d total words\n%d unique words\n%d tags\n' % (wc, len(word_set), len(tag_counts))
+print('%d total words\n%d unique words\n%d tags\n' % (wc, len(word_set), len(tag_counts)))
 
 if args.sort == 'tag':
 	sort_key = lambda (t, c): t
@@ -91,10 +91,10 @@ else:
 
 countlen = max(len(str(tag_counts[tag_counts.max()])) + 2, 9)
 # simple reSt table format
-print '  '.join(['Tag'.center(taglen), 'Count'.center(countlen)])
-print '  '.join(['='*taglen, '='*(countlen)])
+print('  '.join(['Tag'.center(taglen), 'Count'.center(countlen)]))
+print('  '.join(['='*taglen, '='*(countlen)]))
 
 for tag, count in sorted(tag_counts.items(), key=sort_key, reverse=args.reverse):
-	print '  '.join([tag.ljust(taglen), str(count).rjust(countlen)])
+	print('  '.join([tag.ljust(taglen), str(count).rjust(countlen)]))
 
-print '  '.join(['='*taglen, '='*(countlen)])
+print('  '.join(['='*taglen, '='*(countlen)]))

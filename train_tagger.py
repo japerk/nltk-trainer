@@ -110,7 +110,7 @@ args = parser.parse_args()
 ###################
 
 if args.trace:
-	print 'loading %s' % args.corpus
+	print('loading %s' % args.corpus)
 
 tagged_corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 fileids = args.fileids
@@ -138,7 +138,7 @@ else:
 		kwargs['fileids'] = [fileids]
 	
 		if args.trace:
-			print 'using tagged sentences from %s' % fileids
+			print('using tagged sentences from %s' % fileids)
 	
 	tagged_sents = tagged_corpus.tagged_sents(**kwargs)
 
@@ -162,7 +162,7 @@ else:
 	test_sents = tagged_sents[cutoff:]
 
 if args.trace:
-	print '%d tagged sents, training on %d' % (nsents, len(train_sents))
+	print('%d tagged sents, training on %d' % (nsents, len(train_sents)))
 
 ####################
 ## default tagger ##
@@ -170,7 +170,7 @@ if args.trace:
 
 if args.backoff:
 	if args.trace:
-		print 'loading backoff tagger %s' % args.backoff
+		print('loading backoff tagger %s' % args.backoff)
 	
 	tagger = nltk.data.load(args.backoff)
 else:
@@ -187,7 +187,7 @@ def affix_constructor(train_sents, backoff=None):
 	
 	for affix in affixes:
 		if args.trace:
-			print 'training AffixTagger with affix %d and backoff %s' % (affix, backoff)
+			print('training AffixTagger with affix %d and backoff %s' % (affix, backoff))
 		
 		backoff = nltk.tag.AffixTagger(train_sents, affix_length=affix,
 			min_stem_length=min(affix, 2), backoff=backoff)
@@ -197,7 +197,7 @@ def affix_constructor(train_sents, backoff=None):
 def ngram_constructor(cls):
 	def f(train_sents, backoff=None):
 		if args.trace:
-			print 'training %s tagger with backoff %s' % (cls, backoff)
+			print('training %s tagger with backoff %s' % (cls, backoff))
 		# TODO: args.cutoff option
 		return cls(train_sents, backoff=backoff)
 	
@@ -242,7 +242,7 @@ if args.classifier:
 		cls = ClassifierBasedPOSTagger
 	
 	if args.trace:
-		print 'training %s %s' % (args.classifier, cls.__name__)
+		print('training %s %s' % (args.classifier, cls.__name__))
 	
 	tagger = cls(**kwargs)
 
@@ -259,8 +259,8 @@ if args.brill:
 ################
 
 if not args.no_eval:
-	print 'evaluating %s' % tagger.__class__.__name__
-	print 'accuracy: %f' % tagger.evaluate(test_sents)
+	print('evaluating %s' % tagger.__class__.__name__)
+	print('accuracy: %f' % tagger.evaluate(test_sents))
 
 ##############
 ## pickling ##

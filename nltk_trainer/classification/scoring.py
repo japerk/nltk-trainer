@@ -74,7 +74,7 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, inform
 	step = l / folds
 	
 	if trace:
-		print 'step %d over %d folds of %d instances' % (step, folds, l)
+		print('step %d over %d folds of %d instances' % (step, folds, l))
 	
 	accuracies = []
 	precisions = collections.defaultdict(list)
@@ -83,8 +83,8 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, inform
 	
 	for f in range(folds):
 		if trace:
-			print '\nfold %d' % (f+1)
-			print '-----%s' % ('-'*len('%s' % (f+1)))
+			print('\nfold %d' % (f+1))
+			print('-----%s' % ('-'*len('%s' % (f+1))))
 		
 		start = f * step
 		end = start + step
@@ -92,12 +92,12 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, inform
 		test_instances = instances[start:end]
 		
 		if trace:
-			print 'training on %d:%d + %d:%d' % (0, start, end, l)
+			print('training on %d:%d + %d:%d' % (0, start, end, l))
 		
 		obj = trainf(train_instances)
 		
 		if trace:
-			print 'testing on %d:%d' % (start, end)
+			print('testing on %d:%d' % (start, end))
 		
 		if metrics:
 			refsets, testsets = ref_test_sets(obj, test_instances)
@@ -113,14 +113,14 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, inform
 				f_measures[key].append(f)
 				
 				if trace:
-					print '%s precision: %f' % (key, p)
-					print '%s recall: %f' % (key, r)
-					print '%s f-measure: %f' % (key, f)
+					print('%s precision: %f' % (key, p))
+					print('%s recall: %f' % (key, r))
+					print('%s f-measure: %f' % (key, f))
 		
 		accuracy = testf(obj, test_instances)
 		
 		if trace:
-			print 'accuracy: %f' % accuracy
+			print('accuracy: %f' % accuracy)
 		
 		accuracies.append(accuracy)
 		
@@ -128,21 +128,21 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, inform
 			obj.show_most_informative_features(informative)
 	
 	if trace:
-		print '\nmean and variance across folds'
-		print '------------------------------'
-		print 'accuracy mean: %f' % (sum(accuracies) / folds)
-		print 'accuracy variance: %f' % array(accuracies).var()
+		print('\nmean and variance across folds')
+		print('------------------------------')
+		print('accuracy mean: %f' % (sum(accuracies) / folds))
+		print('accuracy variance: %f' % array(accuracies).var())
 		
 		for key, ps in precisions.iteritems():
-			print '%s precision mean: %f' % (key, sum(ps) / folds)
-			print '%s precision variance: %f' % (key, array(ps).var())
+			print('%s precision mean: %f' % (key, sum(ps) / folds))
+			print('%s precision variance: %f' % (key, array(ps).var()))
 		
 		for key, rs in recalls.iteritems():
-			print '%s recall mean: %f' % (key, sum(rs) / folds)
-			print '%s recall variance: %f' % (key, array(rs).var())
+			print('%s recall mean: %f' % (key, sum(rs) / folds))
+			print('%s recall variance: %f' % (key, array(rs).var()))
 		
 		for key, fs in f_measures.iteritems():
-			print '%s f_measure mean: %f' % (key, sum(fs) / folds)
-			print '%s f_measure variance: %f' % (key, array(fs).var())
+			print('%s f_measure mean: %f' % (key, sum(fs) / folds))
+			print('%s f_measure variance: %f' % (key, array(fs).var()))
 	
 	return accuracies, precisions, recalls, f_measures

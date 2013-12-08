@@ -37,21 +37,20 @@ def soundex (term):
 		return "0000" # could be Z000 for compatibility with other implementations
 	# end if
 
-    	# convert into uppercase letters
+		# convert into uppercase letters
 	term = string.upper(term)
-    	first_char = term[0]
+	first_char = term[0]
 
 	# translate the string into soundex code according to the table above
 	term = string.translate(term[1:], table)
 	
 	# remove all 0s
 	term = string.replace(term, "0", "")
-
-    	# remove duplicate numbers in-a-row
-    	str2 = first_char
+	# remove duplicate numbers in-a-row
+	str2 = first_char
 	for x in term:
 		if x != str2[-1]:
-	   		str2 = str2 + x
+			str2 = str2 + x
 		# end if
 	# end for
 
@@ -97,10 +96,10 @@ def metaphone (term):
 	# extension #3 (added 2005-01-24)
 	# conflate repeated letters
 	firstChar = term[0]
-    	str2 = firstChar
+	str2 = firstChar
 	for x in term:
 		if x != str2[-1]:
-	   		str2 = str2 + x
+			str2 = str2 + x
 		# end if
 	# end for
 	
@@ -128,12 +127,12 @@ def metaphone (term):
 
 		# build translation table
 		table = {
-		    "ae":"e",
-		    "gn":"n",
-		    "kn":"n",
-		    "pn":"n",
-		    "wr":"n",
-		    "wh":"w"
+			"ae":"e",
+			"gn":"n",
+			"kn":"n",
+			"pn":"n",
+			"wr":"n",
+			"wh":"w"
 		}
 		
 		if first_chars in table.keys():

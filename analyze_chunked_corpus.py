@@ -4,7 +4,6 @@ import nltk.corpus
 from nltk.tree import Tree
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist, ConditionalFreqDist
-from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer import load_corpus_reader
 
 ########################################
@@ -83,9 +82,9 @@ print('%d tags' % len(tag_counts))
 print('%d IOBs\n' % len(iob_counts))
 
 if args.sort == 'tag':
-	sort_key = lambda (t, c): t
+	sort_key = lambda tc: tc[0]
 elif args.sort == 'count':
-	sort_key = lambda (t, c): c
+	sort_key = lambda tc: tc[1]
 else:
 	raise ValueError('%s is not a valid sort option' % args.sort)
 

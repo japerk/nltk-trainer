@@ -25,7 +25,7 @@ def sum_category_word_scores(categorized_words, score_fn):
 	return scores
 
 def sorted_word_scores(wsdict):
-	return sorted(wsdict.items(), key=lambda (w, s): s, reverse=True)
+	return sorted(wsdict.items(), key=lambda ws: ws[1], reverse=True)
 
 def ref_test_sets(classifier, test_feats):
 	refsets = collections.defaultdict(set)

@@ -3,7 +3,7 @@ import argparse, collections, math, os.path
 import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
-from nltk.tag.simplify import simplify_wsj_tag
+#from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer import load_corpus_reader, load_model
 from nltk_trainer.tagging import taggers
 
@@ -34,8 +34,8 @@ corpus_group.add_argument('--fileids', default=None,
 	help='Specify fileids to load from corpus')
 corpus_group.add_argument('--fraction', default=1.0, type=float,
 	help='''The fraction of the corpus to use for testing coverage''')
-corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
-	help='Use simplified tags. Requires the --metrics option.')
+#corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
+#	help='Use simplified tags. Requires the --metrics option.')
 
 args = parser.parse_args()
 
@@ -47,10 +47,10 @@ corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileid
 
 kwargs = {'fileids': args.fileids}
 
-if args.simplify_tags and not args.metrics:
-	raise ValueError('simplify_tags can only be used with the --metrics option')
-elif args.simplify_tags and args.corpus not in ['conll2000', 'switchboard']:
-	kwargs['simplify_tags'] = True
+#if args.simplify_tags and not args.metrics:
+#	raise ValueError('simplify_tags can only be used with the --metrics option')
+#elif args.simplify_tags and args.corpus not in ['conll2000', 'switchboard']:
+#	kwargs['simplify_tags'] = True
 
 # TODO: support corpora with alternatives to tagged_sents that work just as well
 if args.metrics and not hasattr(corpus, 'tagged_sents'):

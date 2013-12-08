@@ -3,7 +3,7 @@ import argparse
 import nltk.corpus
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
-from nltk.tag.simplify import simplify_wsj_tag
+#from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer import load_corpus_reader
 
 ########################################
@@ -26,8 +26,8 @@ corpus_group.add_argument('--reader', default=None,
 nltk.corpus.reader.tagged.TaggedCorpusReader''')
 corpus_group.add_argument('--fileids', default=None,
 	help='Specify fileids to load from corpus')
-corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
-	help='Use simplified tags')
+#corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
+#	help='Use simplified tags')
 
 sort_group = parser.add_argument_group('Tag Count Sorting Options')
 sort_group.add_argument('--sort', default='tag', choices=['tag', 'count'],
@@ -58,17 +58,17 @@ tag_counts = FreqDist()
 taglen = 7
 word_set = set()
 
-if args.simplify_tags and args.corpus not in ['conll2000', 'switchboard']:
-	kwargs = {'simplify_tags': True}
-else:
-	kwargs = {}
+#if args.simplify_tags and args.corpus not in ['conll2000', 'switchboard']:
+#	kwargs = {'simplify_tags': True}
+#else:
+kwargs = {}
 
 for word, tag in tagged_corpus.tagged_words(fileids=args.fileids, **kwargs):
 	if len(tag) > taglen:
 		taglen = len(tag)
 	
-	if args.corpus in ['conll2000', 'switchboard'] and args.simplify_tags:
-		tag = simplify_wsj_tag(tag)
+	#if args.corpus in ['conll2000', 'switchboard'] and args.simplify_tags:
+	#	tag = simplify_wsj_tag(tag)
 	
 	wc += 1
 	# loading corpora/treebank/tagged with ChunkedCorpusReader produces None tags
@@ -83,9 +83,9 @@ for word, tag in tagged_corpus.tagged_words(fileids=args.fileids, **kwargs):
 print('%d total words\n%d unique words\n%d tags\n' % (wc, len(word_set), len(tag_counts)))
 
 if args.sort == 'tag':
-	sort_key = lambda (t, c): t
+	sort_key = lambda tc: tc[0]
 elif args.sort == 'count':
-	sort_key = lambda (t, c): c
+	sort_key = lambda tc: tc[1]
 else:
 	raise ValueError('%s is not a valid sort option' % args.sort)
 

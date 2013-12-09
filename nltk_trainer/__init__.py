@@ -2,7 +2,6 @@ import os, os.path, re, time
 import nltk.data
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.misc import babelfish
-#from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
 
 try:
@@ -17,9 +16,15 @@ except ImportError:
 		return d.iteritems()
 
 try:
-	basestring
+	basestring = basestring
 except NameError:
 	basestring = unicode = str
+
+try:
+	# TODO: switch to universal
+	from nltk.tag.simplify import simplify_wsj_tag
+except ImportError:
+	simplify_wsj_tag = None
 
 def dump_object(obj, fname, trace=1):
 	dirname = os.path.dirname(fname)
@@ -52,7 +57,7 @@ def load_corpus_reader(corpus, reader=None, fileids=None, sent_tokenizer=None, w
 	if corpus == 'timit':
 		# TODO: switch to universal
 		return LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader,
-			'.+\.tags')#, tag_mapping_function=simplify_wsj_tag)
+			'.+\.tags', tag_mapping_function=simplify_wsj_tag)
 	
 	real_corpus = getattr(nltk.corpus, corpus, None)
 	

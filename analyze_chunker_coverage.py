@@ -3,7 +3,7 @@ import argparse, collections, math
 import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
-from nltk_trainer import load_corpus_reader, load_model
+from nltk_trainer import load_corpus_reader, load_model, simplify_wsj_tag
 from nltk_trainer.chunking import chunkers
 from nltk_trainer.tagging import taggers
 
@@ -37,6 +37,10 @@ corpus_group.add_argument('--fileids', default=None,
 	help='Specify fileids to load from corpus')
 corpus_group.add_argument('--fraction', default=1.0, type=float,
 	help='''The fraction of the corpus to use for testing coverage''')
+
+if simplify_wsj_tag:
+	corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
+		help='Use simplified tags')
 
 args = parser.parse_args()
 

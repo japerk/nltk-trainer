@@ -3,7 +3,7 @@ import argparse, math, itertools, os.path
 import nltk.tag, nltk.chunk, nltk.chunk.util
 import nltk_trainer.classification.args
 from nltk.corpus.reader import IEERCorpusReader
-from nltk_trainer import dump_object, load_corpus_reader
+from nltk_trainer import dump_object, load_corpus_reader, simplify_wsj_tag
 from nltk_trainer.chunking import chunkers, transforms
 
 ########################################
@@ -39,8 +39,10 @@ Cannot be combined with --shallow-tree.''')
 corpus_group.add_argument('--shallow-tree', action='store_true', default=False,
 	help='''Use shallow trees from parsed_sents() instead of chunked_sents().
 Cannot be combined with --flatten-deep-tree.''')
-#corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
-#	help='Use simplified tags')
+
+if simplify_wsj_tag:
+	corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
+		help='Use simplified tags')
 
 chunker_group = parser.add_argument_group('Chunker Options')
 chunker_group.add_argument('--sequential', default='ub',
@@ -83,8 +85,8 @@ if fileids and fileids in chunked_corpus.fileids():
 	if args.trace:
 		print('using chunked sentences from %s' % fileids)
 
-#if args.simplify_tags:
-#	kwargs['simplify_tags'] = True
+if simplify_wsj_tag and args.simplify_tags:
+	kwargs['simplify_tags'] = True
 
 if isinstance(chunked_corpus, IEERCorpusReader):
 	chunk_trees = []

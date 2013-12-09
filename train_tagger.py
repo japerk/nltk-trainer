@@ -7,8 +7,7 @@ from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesCl
 from nltk.corpus.reader import SwitchboardCorpusReader, NPSChatCorpusReader, IndianCorpusReader
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag import ClassifierBasedPOSTagger
-#from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer import dump_object, load_corpus_reader
+from nltk_trainer import dump_object, load_corpus_reader, simplify_wsj_tag
 from nltk_trainer.tagging import readers
 from nltk_trainer.tagging.training import train_brill_tagger
 from nltk_trainer.tagging.taggers import PhoneticClassifierBasedPOSTagger
@@ -45,10 +44,12 @@ tagger_group = parser.add_argument_group('Tagger Choices')
 tagger_group.add_argument('--default', default='-None-',
 	help='''The default tag "%(default)s". Set this to a different tag, such as "NN",
 to change the default tag.''')
-#tagger_group.add_argument('--simplify_tags', action='store_true', default=False,
-#	help='Use simplified tags')
 tagger_group.add_argument('--backoff', default=None,
 	help='Path to pickled backoff tagger. If given, replaces default tagger.')
+
+if simplify_wsj_tag:
+	tagger_group.add_argument('--simplify_tags', action='store_true', default=False,
+		help='Use simplified tags')
 
 sequential_group = parser.add_argument_group('Sequential Tagger')
 sequential_group.add_argument('--sequential', default='aubt',
@@ -117,11 +118,11 @@ fileids = args.fileids
 kwargs = {}
 
 # all other corpora are assumed to support simplify_tags kwarg
-#if args.simplify_tags and args.corpus not in ['conll2000', 'switchboard', 'pl196x']:
-#	kwargs['simplify_tags'] = True
+if simplify_wsj_tag and args.simplify_tags and args.corpus not in ['conll2000', 'switchboard', 'pl196x']:
+	kwargs['simplify_tags'] = True
 # these corpora do not support simplify_tags, and have no known workaround
-#elif args.simplify_tags and args.corpus in ['pl196x']:
-#	raise ValueError('%s does not support simplify_tags' % args.corpus)
+elif simplify_wsj_tag and args.simplify_tags and args.corpus in ['pl196x']:
+	raise ValueError('%s does not support simplify_tags' % args.corpus)
 
 if isinstance(tagged_corpus, SwitchboardCorpusReader):
 	if fileids:
@@ -143,8 +144,8 @@ else:
 	tagged_sents = tagged_corpus.tagged_sents(**kwargs)
 
 # manual simplification is needed for these corpora
-#if args.simplify_tags and args.corpus in ['conll2000', 'switchboard']:
-#	tagged_sents = [[(word, simplify_wsj_tag(tag)) for (word, tag) in sent] for sent in tagged_sents]
+if simplify_wsj_tag and args.simplify_tags and args.corpus in ['conll2000', 'switchboard']:
+	tagged_sents = [[(word, simplify_wsj_tag(tag)) for (word, tag) in sent] for sent in tagged_sents]
 
 ##################
 ## tagged sents ##

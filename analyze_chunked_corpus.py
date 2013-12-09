@@ -4,7 +4,7 @@ import nltk.corpus
 from nltk.tree import Tree
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist, ConditionalFreqDist
-from nltk_trainer import load_corpus_reader
+from nltk_trainer import load_corpus_reader, simplify_wsj_tag
 
 ########################################
 ## command options & argument parsing ##
@@ -26,6 +26,10 @@ corpus_group.add_argument('--reader', default=None,
 nltk.corpus.reader.chunked.ChunkedCorpusReader''')
 corpus_group.add_argument('--fileids', default=None,
 	help='Specify fileids to load from corpus')
+
+if simplify_wsj_tag:
+	corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
+		help='Use simplified tags')
 
 sort_group = parser.add_argument_group('Tag Count Sorting Options')
 sort_group.add_argument('--sort', default='tag', choices=['tag', 'count'],

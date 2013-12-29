@@ -50,6 +50,9 @@ tagger_group.add_argument('--backoff', default=None,
 if simplify_wsj_tag:
 	tagger_group.add_argument('--simplify_tags', action='store_true', default=False,
 		help='Use simplified tags')
+else:
+	tagger_group.add_argument('--tagset', default=None,
+		help='Map tags to a given tagset, such as "universal"')
 
 sequential_group = parser.add_argument_group('Sequential Tagger')
 sequential_group.add_argument('--sequential', default='aubt',
@@ -123,6 +126,11 @@ if simplify_wsj_tag and args.simplify_tags and args.corpus not in ['conll2000', 
 # these corpora do not support simplify_tags, and have no known workaround
 elif simplify_wsj_tag and args.simplify_tags and args.corpus in ['pl196x']:
 	raise ValueError('%s does not support simplify_tags' % args.corpus)
+elif not simplify_wsj_tag and args.tagset:
+	kwargs['tagset'] = args.tagset
+	
+	if args.trace:
+		print('using %s tagset' % args.tagset)
 
 if isinstance(tagged_corpus, SwitchboardCorpusReader):
 	if fileids:

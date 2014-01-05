@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-import argparse
+import argparse, collections
 import nltk.corpus
 from nltk.tree import Tree
 from nltk.corpus.util import LazyCorpusLoader
-from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk_trainer import load_corpus_reader, simplify_wsj_tag
+from nltk_trainer.chunking.transforms import node_label
 
 ########################################
 ## command options & argument parsing ##
@@ -56,25 +56,26 @@ if args.trace:
 ##############
 
 wc = 0
-tag_counts = FreqDist()
-iob_counts = FreqDist()
-tag_iob_counts = ConditionalFreqDist()
+tag_counts = collections.defaultdict(int)
+iob_counts = collections.defaultdict(int)
+tag_iob_counts = collections.defaultdict(lambda: collections.defaultdict(int))
 word_set = set()
 
 for obj in chunked_corpus.chunked_words():
 	if isinstance(obj, Tree):
-		iob_counts.inc(obj.node)
+		label = node_label(obj)
+		iob_counts[label] += 1
 		
 		for word, tag in obj.leaves():
 			wc += 1
 			word_set.add(word)
-			tag_counts.inc(tag)
-			tag_iob_counts[tag].inc(obj.node)
+			tag_counts[tag] += 1
+			tag_iob_counts[tag][label] += 1
 	else:
 		word, tag = obj
 		wc += 1
 		word_set.add(word)
-		tag_counts.inc(tag)
+		tag_counts[tag] += 1
 
 ############
 ## output ##

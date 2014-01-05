@@ -2,9 +2,9 @@
 import argparse, collections, math
 import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
-from nltk.probability import FreqDist
 from nltk_trainer import load_corpus_reader, load_model, simplify_wsj_tag
 from nltk_trainer.chunking import chunkers
+from nltk_trainer.chunking.transforms import node_label
 from nltk_trainer.tagging import taggers
 
 ########################################
@@ -87,12 +87,13 @@ if args.score:
 		cutoff = int(math.ceil(len(chunked_sents) * args.fraction))
 		chunked_sents = chunked_sents[:cutoff]
 	
-	print(chunker.evaluate(chunked_sents), '\n')
+	print(chunker.evaluate(chunked_sents))
+	print('\n')
 
 if args.trace:
 	print('analyzing chunker coverage of %s with %s\n' % (args.corpus, chunker.__class__.__name__))
 
-iobs_found = FreqDist()
+iobs_found = collections.defaultdict(int)
 sents = corpus.sents()
 
 if args.fraction != 1.0:
@@ -102,10 +103,10 @@ if args.fraction != 1.0:
 for sent in sents:
 	tree = chunker.parse(tagger.tag(sent))
 	
-	for child in tree.subtrees(lambda t: t.node != 'S'):
-		iobs_found.inc(child.node)
+	for child in tree.subtrees(lambda t: node_label(t) != 'S'):
+		iobs_found[node_label(child)] += 1
 
-iobs = iobs_found.samples()
+iobs = iobs_found.keys()
 justify = max(7, *[len(iob) for iob in iobs])
 
 print('IOB'.center(justify) + '    Found  ')

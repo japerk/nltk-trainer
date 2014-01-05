@@ -43,13 +43,13 @@ it_analyzes_treebank_metrics() {
 	echo "$two_lines" | grep -q "Unknown words:"
 }
 
-it_requires_metrics_with_simplify_tags() {
-	last_line=$(./analyze_tagger_coverage.py treebank --simplify_tags 2>&1 | tail -n 1)
-	test "$last_line" "=" "ValueError: simplify_tags can only be used with the --metrics option"
+it_requires_metrics_with_tagset() {
+	last_line=$(./analyze_tagger_coverage.py treebank --tagset universal 2>&1 | tail -n 1)
+	test "$last_line" "=" "ValueError: tagset can only be used with the --metrics option"
 }
 
-it_analyzes_treebank_simplify_tags_metrics() {
-	two_lines=$(./analyze_tagger_coverage.py treebank --simplify_tags --metrics --fraction 0.5 2>&1 | head -n 5 | tail -n 2)
+it_analyzes_treebank_universal_tags_metrics() {
+	two_lines=$(./analyze_tagger_coverage.py treebank --tagset universal --metrics --fraction 0.5 2>&1 | head -n 5 | tail -n 2)
 	echo "$two_lines" | grep -q "Accuracy:"
 	echo "$two_lines" | grep -q "Unknown words:"
 }

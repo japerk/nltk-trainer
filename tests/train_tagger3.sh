@@ -22,25 +22,25 @@ it_cannot_find_foo() {
 }
 
 it_trains_treebank() {
-	test "$(./train_tagger.py treebank --no-pickle --no-eval --fraction 0.5)" "=" "loading treebank
+	test "$(PYTHONHASHSEED=0 ./train_tagger.py treebank --no-pickle --no-eval --fraction 0.5)" "=" "loading treebank
 3914 tagged sents, training on 1957
 training AffixTagger with affix -3 and backoff <DefaultTagger: tag=-None->
 training <class 'nltk.tag.sequential.UnigramTagger'> tagger with backoff <AffixTagger: size=2026>
-training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=3261>
-training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=1275>"
+training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=3260>
+training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=1274>"
 }
 
 it_trains_corpora_treebank_tagged() {
-	test "$(./train_tagger.py corpora/treebank/tagged --reader nltk.corpus.reader.ChunkedCorpusReader --no-pickle --no-eval --fraction 0.5)" "=" "loading corpora/treebank/tagged
+	test "$(PYTHONHASHSEED=0 ./train_tagger.py corpora/treebank/tagged --reader nltk.corpus.reader.ChunkedCorpusReader --no-pickle --no-eval --fraction 0.5)" "=" "loading corpora/treebank/tagged
 51002 tagged sents, training on 25501
 training AffixTagger with affix -3 and backoff <DefaultTagger: tag=-None->
 training <class 'nltk.tag.sequential.UnigramTagger'> tagger with backoff <AffixTagger: size=1810>
-training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=3220>
-training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=1166>"
+training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=3221>
+training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=1156>"
 }
 
 it_trains_ub() {
-	test "$(./train_tagger.py treebank --sequential ub --no-pickle --no-eval --fraction 0.5)" "=" "loading treebank
+	test "$(PYTHONHASHSEED=0 ./train_tagger.py treebank --sequential ub --no-pickle --no-eval --fraction 0.5)" "=" "loading treebank
 3914 tagged sents, training on 1957
 training <class 'nltk.tag.sequential.UnigramTagger'> tagger with backoff <DefaultTagger: tag=-None->
 training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=8435>"
@@ -56,11 +56,11 @@ training NaiveBayes classifier"
 }
 
 it_trains_treebank_universal_tags() {
-	test "$(./train_tagger.py treebank --tagset universal --no-pickle --no-eval --fraction 0.5)" "=" "loading treebank
+	test "$(PYTHONHASHSEED=0 ./train_tagger.py treebank --tagset universal --no-pickle --no-eval --fraction 0.5)" "=" "loading treebank
 using universal tagset
 3914 tagged sents, training on 1957
 training AffixTagger with affix -3 and backoff <DefaultTagger: tag=-None->
 training <class 'nltk.tag.sequential.UnigramTagger'> tagger with backoff <AffixTagger: size=2026>
-training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=2245>
+training <class 'nltk.tag.sequential.BigramTagger'> tagger with backoff <UnigramTagger: size=2244>
 training <class 'nltk.tag.sequential.TrigramTagger'> tagger with backoff <BigramTagger: size=742>"
 }

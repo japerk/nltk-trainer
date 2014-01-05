@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import collections
 import nltk.corpus
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.probability import FreqDist
@@ -29,6 +30,9 @@ corpus_group.add_argument('--fileids', default=None,
 if simplify_wsj_tag:
 	corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
 		help='Use simplified tags')
+else:
+	corpus_group.add_argument('--tagset', default=None,
+		help='Map tags to a given tagset, such as "universal"')
 
 sort_group = parser.add_argument_group('Tag Count Sorting Options')
 sort_group.add_argument('--sort', default='tag', choices=['tag', 'count'],
@@ -55,16 +59,21 @@ if args.trace:
 ##############
 
 wc = 0
-tag_counts = FreqDist()
+tag_counts = collections.defaultdict(int)
 taglen = 7
 word_set = set()
 
 if simplify_wsj_tag and args.simplify_tags and args.corpus not in ['conll2000', 'switchboard']:
 	kwargs = {'simplify_tags': True}
+elif not simplify_wsj_tag and args.tagset:
+	kwargs = {'tagset': args.tagset}
 else:
 	kwargs = {}
 
 for word, tag in tagged_corpus.tagged_words(fileids=args.fileids, **kwargs):
+	if not tag:
+		continue
+	
 	if len(tag) > taglen:
 		taglen = len(tag)
 	
@@ -74,7 +83,7 @@ for word, tag in tagged_corpus.tagged_words(fileids=args.fileids, **kwargs):
 	wc += 1
 	# loading corpora/treebank/tagged with ChunkedCorpusReader produces None tags
 	if not isinstance(tag, basestring): tag = str(tag)
-	tag_counts.inc(tag)
+	tag_counts[tag] += 1
 	word_set.add(word)
 
 ############
@@ -90,12 +99,13 @@ elif args.sort == 'count':
 else:
 	raise ValueError('%s is not a valid sort option' % args.sort)
 
-countlen = max(len(str(tag_counts[tag_counts.max()])) + 2, 9)
+sorted_tag_counts = sorted(tag_counts.items(), key=sort_key, reverse=args.reverse)
+countlen = max(len(str(sorted_tag_counts[0][1])) + 2, 9)
 # simple reSt table format
 print('  '.join(['Tag'.center(taglen), 'Count'.center(countlen)]))
 print('  '.join(['='*taglen, '='*(countlen)]))
 
-for tag, count in sorted(tag_counts.items(), key=sort_key, reverse=args.reverse):
+for tag, count in sorted_tag_counts:
 	print('  '.join([tag.ljust(taglen), str(count).rjust(countlen)]))
 
 print('  '.join(['='*taglen, '='*(countlen)]))

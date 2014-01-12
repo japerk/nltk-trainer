@@ -203,7 +203,7 @@ if not args.no_pickle:
 		parts = [os.path.split(args.corpus.rstrip('/'))[-1]]
 		
 		if args.classifier:
-			parts.append(args.classifier)
+			parts.append('_'.join(args.classifier))
 		elif args.sequential:
 			parts.append(args.sequential)
 		

@@ -3,7 +3,7 @@ import argparse, math, itertools, os.path
 import nltk.tag, nltk.chunk, nltk.chunk.util
 import nltk_trainer.classification.args
 from nltk.corpus.reader import IEERCorpusReader
-from nltk_trainer import dump_object, load_corpus_reader
+from nltk_trainer import dump_object, load_corpus_reader, simplify_wsj_tag
 from nltk_trainer.chunking import chunkers, transforms
 
 ########################################
@@ -39,8 +39,10 @@ Cannot be combined with --shallow-tree.''')
 corpus_group.add_argument('--shallow-tree', action='store_true', default=False,
 	help='''Use shallow trees from parsed_sents() instead of chunked_sents().
 Cannot be combined with --flatten-deep-tree.''')
-corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
-	help='Use simplified tags')
+
+if simplify_wsj_tag:
+	corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
+		help='Use simplified tags')
 
 chunker_group = parser.add_argument_group('Chunker Options')
 chunker_group.add_argument('--sequential', default='ub',
@@ -70,7 +72,7 @@ args = parser.parse_args()
 ###################
 
 if args.trace:
-	print 'loading %s' % args.corpus
+	print('loading %s' % args.corpus)
 
 chunked_corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 chunked_corpus.fileids()
@@ -81,16 +83,16 @@ if fileids and fileids in chunked_corpus.fileids():
 	kwargs['fileids'] = [fileids]
 
 	if args.trace:
-		print 'using chunked sentences from %s' % fileids
+		print('using chunked sentences from %s' % fileids)
 
-if args.simplify_tags:
+if simplify_wsj_tag and args.simplify_tags:
 	kwargs['simplify_tags'] = True
 
 if isinstance(chunked_corpus, IEERCorpusReader):
 	chunk_trees = []
 	
 	if args.trace:
-		print 'converting ieer parsed docs to chunked sentences'
+		print('converting ieer parsed docs to chunked sentences')
 	
 	for doc in chunked_corpus.parsed_docs(**kwargs):
 		tagged = chunkers.ieertree2conlltags(doc.text)
@@ -101,7 +103,7 @@ elif (args.flatten_deep_tree or args.shallow_tree) and not hasattr(chunked_corpu
 	raise ValueError('%s does not have parsed sents' % args.corpus)
 elif args.flatten_deep_tree:
 	if args.trace:
-		print 'flattening deep trees from %s' % args.corpus
+		print('flattening deep trees from %s' % args.corpus)
 	
 	chunk_trees = []
 	
@@ -110,10 +112,10 @@ elif args.flatten_deep_tree:
 			chunk_trees.append(transforms.flatten_deeptree(tree))
 		except AttributeError as exc:
 			if args.trace > 1:
-				print 'skipping bad tree %d: %s' % (i, exc)
+				print('skipping bad tree %d: %s' % (i, exc))
 elif args.shallow_tree:
 	if args.trace:
-		print 'creating shallow trees from %s' % args.corpus
+		print('creating shallow trees from %s' % args.corpus)
 	
 	chunk_trees = []
 	
@@ -122,7 +124,7 @@ elif args.shallow_tree:
 			chunk_trees.append(transforms.shallow_tree(tree))
 		except AttributeError as exc:
 			if args.trace > 1:
-				print 'skipping bad tree %d: %s' % (i, exc)
+				print('skipping bad tree %d: %s' % (i, exc))
 elif not hasattr(chunked_corpus, 'chunked_sents'):
 	raise ValueError('%s does not have chunked sents' % args.corpus)
 else:
@@ -142,7 +144,7 @@ else:
 	test_chunks = chunk_trees[cutoff:]
 
 if args.trace:
-	print '%d chunks, training on %d' % (nchunks, len(train_chunks))
+	print('%d chunks, training on %d' % (nchunks, len(train_chunks)))
 
 ##########################
 ## tagger based chunker ##
@@ -164,7 +166,7 @@ if args.sequential and not args.classifier:
 		tagger_classes.append(sequential_classes[c])
 	
 	if args.trace:
-		print 'training %s TagChunker' % args.sequential
+		print('training %s TagChunker' % args.sequential)
 	
 	chunker = chunkers.TagChunker(train_chunks, tagger_classes)
 
@@ -174,7 +176,7 @@ if args.sequential and not args.classifier:
 
 if args.classifier:
 	if args.trace:
-		print 'training ClassifierChunker with %s classifier' % args.classifier
+		print('training ClassifierChunker with %s classifier' % args.classifier)
 	# TODO: feature extraction options
 	chunker = chunkers.ClassifierChunker(train_chunks, verbose=args.trace,
 		classifier_builder=nltk_trainer.classification.args.make_classifier_builder(args))
@@ -185,9 +187,9 @@ if args.classifier:
 
 if not args.no_eval:
 	if args.trace:
-		print 'evaluating %s' % chunker.__class__.__name__
+		print('evaluating %s' % chunker.__class__.__name__)
 	
-	print chunker.evaluate(test_chunks)
+	print(chunker.evaluate(test_chunks))
 
 ##############
 ## pickling ##
@@ -201,7 +203,7 @@ if not args.no_pickle:
 		parts = [os.path.split(args.corpus.rstrip('/'))[-1]]
 		
 		if args.classifier:
-			parts.append(args.classifier)
+			parts.append('_'.join(args.classifier))
 		elif args.sequential:
 			parts.append(args.sequential)
 		

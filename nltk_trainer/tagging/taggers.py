@@ -1,6 +1,7 @@
 from nltk.tag.sequential import SequentialBackoffTagger
 from nltk.probability import FreqDist
 from nltk.tag import ClassifierBasedPOSTagger, TaggerI, str2tuple
+from nltk_trainer import iteritems
 from nltk_trainer.featx import phonetics
 from nltk_trainer.featx.metaphone import dm
 
@@ -29,7 +30,7 @@ class PhoneticClassifierBasedPOSTagger(ClassifierBasedPOSTagger):
 		feats = ClassifierBasedPOSTagger.feature_detector(self, tokens, index, history)
 		s = tokens[index]
 		
-		for key, fun in self.funs.iteritems():
+		for key, fun in iteritems(self.funs):
 			feats[key] = fun(s)
 		
 		return feats

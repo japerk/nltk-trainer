@@ -37,12 +37,12 @@ it_anayzes_treebank_tagged() {
 46 tags"
 }
 
-it_anayzes_treebank_simplified_tags() {
-	first_lines=$(./analyze_tagged_corpus.py treebank --simplify_tags 2>&1 | head -n 5)
+it_anayzes_treebank_universal_tags() {
+	first_lines=$(./analyze_tagged_corpus.py treebank --tagset universal 2>&1 | head -n 5)
 	test "$first_lines" "=" "loading treebank
-93260 total words
-11968 unique words
-30 tags"
+100676 total words
+12408 unique words
+13 tags"
 }
 
 it_analyzes_treebank_sort_count_reverse() {

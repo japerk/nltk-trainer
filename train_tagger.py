@@ -7,8 +7,7 @@ from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesCl
 from nltk.corpus.reader import SwitchboardCorpusReader, NPSChatCorpusReader, IndianCorpusReader
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.tag import ClassifierBasedPOSTagger
-from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer import dump_object, load_corpus_reader
+from nltk_trainer import dump_object, load_corpus_reader, simplify_wsj_tag
 from nltk_trainer.tagging import readers
 from nltk_trainer.tagging.training import train_brill_tagger
 from nltk_trainer.tagging.taggers import PhoneticClassifierBasedPOSTagger
@@ -45,10 +44,15 @@ tagger_group = parser.add_argument_group('Tagger Choices')
 tagger_group.add_argument('--default', default='-None-',
 	help='''The default tag "%(default)s". Set this to a different tag, such as "NN",
 to change the default tag.''')
-tagger_group.add_argument('--simplify_tags', action='store_true', default=False,
-	help='Use simplified tags')
 tagger_group.add_argument('--backoff', default=None,
 	help='Path to pickled backoff tagger. If given, replaces default tagger.')
+
+if simplify_wsj_tag:
+	tagger_group.add_argument('--simplify_tags', action='store_true', default=False,
+		help='Use simplified tags')
+else:
+	tagger_group.add_argument('--tagset', default=None,
+		help='Map tags to a given tagset, such as "universal"')
 
 sequential_group = parser.add_argument_group('Sequential Tagger')
 sequential_group.add_argument('--sequential', default='aubt',
@@ -110,18 +114,23 @@ args = parser.parse_args()
 ###################
 
 if args.trace:
-	print 'loading %s' % args.corpus
+	print('loading %s' % args.corpus)
 
 tagged_corpus = load_corpus_reader(args.corpus, reader=args.reader, fileids=args.fileids)
 fileids = args.fileids
 kwargs = {}
 
 # all other corpora are assumed to support simplify_tags kwarg
-if args.simplify_tags and args.corpus not in ['conll2000', 'switchboard', 'pl196x']:
+if simplify_wsj_tag and args.simplify_tags and args.corpus not in ['conll2000', 'switchboard', 'pl196x']:
 	kwargs['simplify_tags'] = True
 # these corpora do not support simplify_tags, and have no known workaround
-elif args.simplify_tags and args.corpus in ['pl196x']:
+elif simplify_wsj_tag and args.simplify_tags and args.corpus in ['pl196x']:
 	raise ValueError('%s does not support simplify_tags' % args.corpus)
+elif not simplify_wsj_tag and args.tagset:
+	kwargs['tagset'] = args.tagset
+	
+	if args.trace:
+		print('using %s tagset' % args.tagset)
 
 if isinstance(tagged_corpus, SwitchboardCorpusReader):
 	if fileids:
@@ -138,12 +147,12 @@ else:
 		kwargs['fileids'] = [fileids]
 	
 		if args.trace:
-			print 'using tagged sentences from %s' % fileids
+			print('using tagged sentences from %s' % fileids)
 	
 	tagged_sents = tagged_corpus.tagged_sents(**kwargs)
 
 # manual simplification is needed for these corpora
-if args.simplify_tags and args.corpus in ['conll2000', 'switchboard']:
+if simplify_wsj_tag and args.simplify_tags and args.corpus in ['conll2000', 'switchboard']:
 	tagged_sents = [[(word, simplify_wsj_tag(tag)) for (word, tag) in sent] for sent in tagged_sents]
 
 ##################
@@ -162,7 +171,7 @@ else:
 	test_sents = tagged_sents[cutoff:]
 
 if args.trace:
-	print '%d tagged sents, training on %d' % (nsents, len(train_sents))
+	print('%d tagged sents, training on %d' % (nsents, len(train_sents)))
 
 ####################
 ## default tagger ##
@@ -170,7 +179,7 @@ if args.trace:
 
 if args.backoff:
 	if args.trace:
-		print 'loading backoff tagger %s' % args.backoff
+		print('loading backoff tagger %s' % args.backoff)
 	
 	tagger = nltk.data.load(args.backoff)
 else:
@@ -187,7 +196,7 @@ def affix_constructor(train_sents, backoff=None):
 	
 	for affix in affixes:
 		if args.trace:
-			print 'training AffixTagger with affix %d and backoff %s' % (affix, backoff)
+			print('training AffixTagger with affix %d and backoff %s' % (affix, backoff))
 		
 		backoff = nltk.tag.AffixTagger(train_sents, affix_length=affix,
 			min_stem_length=min(affix, 2), backoff=backoff)
@@ -197,7 +206,7 @@ def affix_constructor(train_sents, backoff=None):
 def ngram_constructor(cls):
 	def f(train_sents, backoff=None):
 		if args.trace:
-			print 'training %s tagger with backoff %s' % (cls, backoff)
+			print('training %s tagger with backoff %s' % (cls, backoff))
 		# TODO: args.cutoff option
 		return cls(train_sents, backoff=backoff)
 	
@@ -242,7 +251,7 @@ if args.classifier:
 		cls = ClassifierBasedPOSTagger
 	
 	if args.trace:
-		print 'training %s %s' % (args.classifier, cls.__name__)
+		print('training %s %s' % (args.classifier, cls.__name__))
 	
 	tagger = cls(**kwargs)
 
@@ -259,8 +268,8 @@ if args.brill:
 ################
 
 if not args.no_eval:
-	print 'evaluating %s' % tagger.__class__.__name__
-	print 'accuracy: %f' % tagger.evaluate(test_sents)
+	print('evaluating %s' % tagger.__class__.__name__)
+	print('accuracy: %f' % tagger.evaluate(test_sents))
 
 ##############
 ## pickling ##

@@ -2,7 +2,6 @@ import os, os.path, re, time
 import nltk.data
 from nltk.corpus.util import LazyCorpusLoader
 from nltk.misc import babelfish
-from nltk.tag.simplify import simplify_wsj_tag
 from nltk_trainer.tagging.readers import NumberedTaggedSentCorpusReader
 
 try:
@@ -10,17 +9,34 @@ try:
 except ImportError:
 	import pickle
 
+try:
+	from nltk.compat import iteritems
+except ImportError:
+	def iteritems(d):
+		return d.iteritems()
+
+try:
+	basestring = basestring
+except NameError:
+	basestring = unicode = str
+
+try:
+	# TODO: switch to universal
+	from nltk.tag.simplify import simplify_wsj_tag
+except ImportError:
+	simplify_wsj_tag = None
+
 def dump_object(obj, fname, trace=1):
 	dirname = os.path.dirname(fname)
 	
 	if dirname and not os.path.exists(dirname):
 		if trace:
-			print 'creating directory %s' % dirname
+			print('creating directory %s' % dirname)
 		
 		os.makedirs(dirname)
 	
 	if trace:
-		print 'dumping %s to %s' % (obj.__class__.__name__, fname)
+		print('dumping %s to %s' % (obj.__class__.__name__, fname))
 	
 	f = open(fname, 'wb')
 	pickle.dump(obj, f)
@@ -39,6 +55,7 @@ def import_attr(path):
 
 def load_corpus_reader(corpus, reader=None, fileids=None, sent_tokenizer=None, word_tokenizer=None, **kwargs):
 	if corpus == 'timit':
+		# TODO: switch to universal
 		return LazyCorpusLoader('timit', NumberedTaggedSentCorpusReader,
 			'.+\.tags', tag_mapping_function=simplify_wsj_tag)
 	
@@ -94,7 +111,7 @@ def translate(text, source, target, trace=1, sleep=1, retries=1):
 	except babelfish.BabelizerIOError as exc:
 		if retries:
 			if trace:
-				print 'IO error in translation, trying again after %ss' % sleep
+				print('IO error in translation, trying again after %ss' % sleep)
 			
 			time.sleep(sleep)
 			return translate(text, source, target, sleep, retries=retries-1)
@@ -102,7 +119,7 @@ def translate(text, source, target, trace=1, sleep=1, retries=1):
 			raise exc
 	except babelfish.BabelfishChangedError as exc:
 		if trace:
-			print 'error getting translation for:', text, '::', exc
+			print('error getting translation for:', text, '::', exc)
 		
 		return ''
 

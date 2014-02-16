@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import argparse, collections, itertools, math, os.path, re, string, operator
+import argparse, collections, itertools, math, operator, os.path, re, string, sys
 import nltk.data
 import nltk_trainer.classification.args
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
@@ -10,12 +10,11 @@ from nltk.corpus.util import LazyCorpusLoader
 from nltk.metrics import BigramAssocMeasures, f_measure, masi_distance, precision, recall
 from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk.util import ngrams
-from nltk_trainer import dump_object, import_attr, load_corpus_reader
+from nltk_trainer import dump_object, import_attr, iteritems, load_corpus_reader
 from nltk_trainer.classification import corpus, scoring
 from nltk_trainer.classification.featx import (bag_of_words, bag_of_words_in_set,
 	word_counts, train_test_feats, word_counts_in_set)
 from nltk_trainer.classification.multi import MultiBinaryClassifier
-import sys
 
 ########################################
 ## command options & argument parsing ##
@@ -164,7 +163,7 @@ if args.para_block_reader:
 	reader_kwargs['para_block_reader'] = import_attr(args.para_block_reader)
 
 if args.trace:
-	print 'loading %s' % args.corpus
+	print('loading %s' % args.corpus)
 
 categorized_corpus = load_corpus_reader(args.corpus, args.reader,
 	*reader_args, **reader_kwargs)
@@ -179,7 +178,7 @@ else:
 nlabels = len(labels)
 
 if args.trace:
-	print '%d labels: %s' % (nlabels, labels)
+	print('%d labels: %s' % (nlabels, labels))
 
 if not nlabels:
 	raise ValueError('corpus does not have any categories')
@@ -246,7 +245,7 @@ if args.multi and args.binary:
 					cat_words[cat].extend(words)
 			else:
 				cat_words[cats].extend(words)
-		return cat_words.iteritems()
+		return iteritems(cat_words)
 
 else:
 	def split_list(lis, fraction):
@@ -275,7 +274,7 @@ else:
 		train_instances[label], test_instances[label] = split_list(instances, args.fraction)
 		if args.trace > 1:
 			info = (label, len(train_instances[label]), len(test_instances[label]))
-			print '%s: %d training instances, %d testing instances' % info
+			print('%s: %d training instances, %d testing instances' % info)
 	# if we need all the words by category for score_fn, use this method
 	def category_words():
 		'''
@@ -283,7 +282,7 @@ else:
 		Used if we are scoring the words for correlation to categories for feature selection (i.e.,
 		score_fn and max_feats are set)
 		'''
-		return ((cat, (word for i in instance_list for word in i)) for cat, instance_list in train_instances.iteritems())					
+		return ((cat, (word for i in instance_list for word in i)) for cat, instance_list in iteritems(train_instances))					
 
 ##################
 ## word scoring ##
@@ -293,7 +292,7 @@ score_fn = getattr(BigramAssocMeasures, args.score_fn)
 
 if args.min_score or args.max_feats:
 	if args.trace:
-		print 'calculating word scores'
+		print('calculating word scores')
 	
 	# flatten the list of instances to a single iteration of all the words 
 	cat_words = category_words()
@@ -309,25 +308,25 @@ if args.min_score or args.max_feats:
 	
 	if args.value_type == 'bool':
 		if args.trace:
-			print 'using bag of words from known set feature extraction'
+			print('using bag of words from known set feature extraction')
 		
 		featx = lambda words: bag_of_words_in_set(words, bestwords)
 	else:
 		if args.trace:
-			print 'using word counts from known set feature extraction'
+			print('using word counts from known set feature extraction')
 		
 		featx = lambda words: word_counts_in_set(words, bestwords)
 	
 	if args.trace:
-		print '%d words meet min_score and/or max_feats' % len(bestwords)
+		print('%d words meet min_score and/or max_feats' % len(bestwords))
 elif args.value_type == 'bool':
 	if args.trace:
-		print 'using bag of words feature extraction'
+		print('using bag of words feature extraction')
 	
 	featx = bag_of_words
 else:
 	if args.trace:
-		print 'using word counts feature extraction'
+		print('using word counts feature extraction')
 	
 	featx = word_counts
 
@@ -340,7 +339,7 @@ def extract_features(label_instances, featx):
 		# for not (args.multi and args.binary)
         # e.g., li = { 'spam': [ ['hello','world',...], ... ], 'ham': [ ['lorem','ipsum'...], ... ] }
 		feats = []
-		for label, instances in label_instances.iteritems():
+		for label, instances in iteritems(label_instances):
 			feats.extend([(featx(i), label) for i in instances])
 	else:
 		# for arg.multi and args.binary
@@ -356,7 +355,7 @@ if not test_feats:
 	test_feats = train_feats
 
 if args.trace:
-       print '%d training feats, %d testing feats' % (len(train_feats), len(test_feats))
+       print('%d training feats, %d testing feats' % (len(train_feats), len(test_feats)))
 
 ##############
 ## training ##
@@ -372,7 +371,7 @@ if args.cross_fold:
 
 if args.multi and args.binary:
 	if args.trace:
-		print 'training multi-binary %s classifier' % args.classifier
+		print('training multi-binary %s classifier' % args.classifier)
 	classifier = MultiBinaryClassifier.train(labels, train_feats, trainf)
 else:
 	classifier = trainf(train_feats)
@@ -383,12 +382,12 @@ else:
 if not args.no_eval:
 	if not args.no_accuracy:
 		try:
-			print 'accuracy: %f' % accuracy(classifier, test_feats)
+			print('accuracy: %f' % accuracy(classifier, test_feats))
 		except ZeroDivisionError:
-			print 'accuracy: 0'
+			print('accuracy: 0')
 
 	if args.multi and args.binary and not args.no_masi_distance:
-		print 'average masi distance: %f' % (scoring.avg_masi_distance(classifier, test_feats))
+		print('average masi distance: %f' % (scoring.avg_masi_distance(classifier, test_feats)))
 	
 	if not args.no_precision or not args.no_recall or not args.no_fmeasure:
 		if args.multi and args.binary:
@@ -401,16 +400,16 @@ if not args.no_eval:
 			test = testsets[label]
 			
 			if not args.no_precision:
-				print '%s precision: %f' % (label, precision(ref, test) or 0)
+				print('%s precision: %f' % (label, precision(ref, test) or 0))
 			
 			if not args.no_recall:
-				print '%s recall: %f' % (label, recall(ref, test) or 0)
+				print('%s recall: %f' % (label, recall(ref, test) or 0))
 			
 			if not args.no_fmeasure:
-				print '%s f-measure: %f' % (label, f_measure(ref, test) or 0)
+				print('%s f-measure: %f' % (label, f_measure(ref, test) or 0))
 
 if args.show_most_informative and hasattr(classifier, 'show_most_informative_features') and not (args.multi and args.binary) and not args.cross_fold:
-	print '%d most informative features' % args.show_most_informative
+	print('%d most informative features' % args.show_most_informative)
 	classifier.show_most_informative_features(args.show_most_informative)
 
 ##############

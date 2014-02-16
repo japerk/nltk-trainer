@@ -2,10 +2,9 @@
 import argparse, collections, math
 import nltk.corpus, nltk.corpus.reader, nltk.data, nltk.tag, nltk.metrics
 from nltk.corpus.util import LazyCorpusLoader
-from nltk.probability import FreqDist
-from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer import load_corpus_reader, load_model
+from nltk_trainer import load_corpus_reader, load_model, simplify_wsj_tag
 from nltk_trainer.chunking import chunkers
+from nltk_trainer.chunking.transforms import node_label
 from nltk_trainer.tagging import taggers
 
 ########################################
@@ -39,6 +38,10 @@ corpus_group.add_argument('--fileids', default=None,
 corpus_group.add_argument('--fraction', default=1.0, type=float,
 	help='''The fraction of the corpus to use for testing coverage''')
 
+if simplify_wsj_tag:
+	corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
+		help='Use simplified tags')
+
 args = parser.parse_args()
 
 ###################
@@ -55,7 +58,7 @@ if args.score and not hasattr(corpus, 'chunked_sents'):
 ############
 
 if args.trace:
-	print 'loading tagger %s' % args.tagger
+	print('loading tagger %s' % args.tagger)
 
 if args.tagger == 'pattern':
 	tagger = taggers.PatternTagger()
@@ -63,7 +66,7 @@ else:
 	tagger = load_model(args.tagger)
 
 if args.trace:
-	print 'loading chunker %s' % args.chunker
+	print('loading chunker %s' % args.chunker)
 
 if args.chunker == 'pattern':
 	chunker = chunkers.PatternChunker()
@@ -76,7 +79,7 @@ else:
 
 if args.score:
 	if args.trace:
-		print 'evaluating chunker score\n'
+		print('evaluating chunker score\n')
 	
 	chunked_sents = corpus.chunked_sents()
 	
@@ -84,12 +87,13 @@ if args.score:
 		cutoff = int(math.ceil(len(chunked_sents) * args.fraction))
 		chunked_sents = chunked_sents[:cutoff]
 	
-	print chunker.evaluate(chunked_sents), '\n'
+	print(chunker.evaluate(chunked_sents))
+	print('\n')
 
 if args.trace:
-	print 'analyzing chunker coverage of %s with %s\n' % (args.corpus, chunker.__class__.__name__)
+	print('analyzing chunker coverage of %s with %s\n' % (args.corpus, chunker.__class__.__name__))
 
-iobs_found = FreqDist()
+iobs_found = collections.defaultdict(int)
 sents = corpus.sents()
 
 if args.fraction != 1.0:
@@ -99,16 +103,16 @@ if args.fraction != 1.0:
 for sent in sents:
 	tree = chunker.parse(tagger.tag(sent))
 	
-	for child in tree.subtrees(lambda t: t.node != 'S'):
-		iobs_found.inc(child.node)
+	for child in tree.subtrees(lambda t: node_label(t) != 'S'):
+		iobs_found[node_label(child)] += 1
 
-iobs = iobs_found.samples()
+iobs = iobs_found.keys()
 justify = max(7, *[len(iob) for iob in iobs])
 
-print 'IOB'.center(justify) + '    Found  '
-print '='*justify + '  ========='
+print('IOB'.center(justify) + '    Found  ')
+print('='*justify + '  =========')
 
 for iob in sorted(iobs):
-	print '  '.join([iob.ljust(justify), str(iobs_found[iob]).rjust(9)])
+	print('  '.join([iob.ljust(justify), str(iobs_found[iob]).rjust(9)]))
 
-print '='*justify + '  ========='
+print('='*justify + '  =========')

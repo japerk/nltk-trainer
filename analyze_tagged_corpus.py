@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import argparse
+import collections
 import nltk.corpus
 from nltk.corpus.util import LazyCorpusLoader
-from nltk.probability import FreqDist
-from nltk.tag.simplify import simplify_wsj_tag
-from nltk_trainer import load_corpus_reader
+from nltk_trainer import basestring, load_corpus_reader, simplify_wsj_tag
 
 ########################################
 ## command options & argument parsing ##
@@ -26,8 +25,13 @@ corpus_group.add_argument('--reader', default=None,
 nltk.corpus.reader.tagged.TaggedCorpusReader''')
 corpus_group.add_argument('--fileids', default=None,
 	help='Specify fileids to load from corpus')
-corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
-	help='Use simplified tags')
+
+if simplify_wsj_tag:
+	corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
+		help='Use simplified tags')
+else:
+	corpus_group.add_argument('--tagset', default=None,
+		help='Map tags to a given tagset, such as "universal"')
 
 sort_group = parser.add_argument_group('Tag Count Sorting Options')
 sort_group.add_argument('--sort', default='tag', choices=['tag', 'count'],
@@ -47,54 +51,60 @@ if not tagged_corpus:
 	raise ValueError('%s is an unknown corpus')
 
 if args.trace:
-	print 'loading %s' % args.corpus
+	print('loading %s' % args.corpus)
 
 ##############
 ## counting ##
 ##############
 
 wc = 0
-tag_counts = FreqDist()
+tag_counts = collections.defaultdict(int)
 taglen = 7
 word_set = set()
 
-if args.simplify_tags and args.corpus not in ['conll2000', 'switchboard']:
+if simplify_wsj_tag and args.simplify_tags and args.corpus not in ['conll2000', 'switchboard']:
 	kwargs = {'simplify_tags': True}
+elif not simplify_wsj_tag and args.tagset:
+	kwargs = {'tagset': args.tagset}
 else:
 	kwargs = {}
 
 for word, tag in tagged_corpus.tagged_words(fileids=args.fileids, **kwargs):
+	if not tag:
+		continue
+	
 	if len(tag) > taglen:
 		taglen = len(tag)
 	
-	if args.corpus in ['conll2000', 'switchboard'] and args.simplify_tags:
+	if args.corpus in ['conll2000', 'switchboard'] and simplify_wsj_tag and args.simplify_tags:
 		tag = simplify_wsj_tag(tag)
 	
 	wc += 1
 	# loading corpora/treebank/tagged with ChunkedCorpusReader produces None tags
 	if not isinstance(tag, basestring): tag = str(tag)
-	tag_counts.inc(tag)
+	tag_counts[tag] += 1
 	word_set.add(word)
 
 ############
 ## output ##
 ############
 
-print '%d total words\n%d unique words\n%d tags\n' % (wc, len(word_set), len(tag_counts))
+print('%d total words\n%d unique words\n%d tags\n' % (wc, len(word_set), len(tag_counts)))
 
 if args.sort == 'tag':
-	sort_key = lambda (t, c): t
+	sort_key = lambda tc: tc[0]
 elif args.sort == 'count':
-	sort_key = lambda (t, c): c
+	sort_key = lambda tc: tc[1]
 else:
 	raise ValueError('%s is not a valid sort option' % args.sort)
 
-countlen = max(len(str(tag_counts[tag_counts.max()])) + 2, 9)
+sorted_tag_counts = sorted(tag_counts.items(), key=sort_key, reverse=args.reverse)
+countlen = max(len(str(sorted_tag_counts[0][1])) + 2, 9)
 # simple reSt table format
-print '  '.join(['Tag'.center(taglen), 'Count'.center(countlen)])
-print '  '.join(['='*taglen, '='*(countlen)])
+print('  '.join(['Tag'.center(taglen), 'Count'.center(countlen)]))
+print('  '.join(['='*taglen, '='*(countlen)]))
 
-for tag, count in sorted(tag_counts.items(), key=sort_key, reverse=args.reverse):
-	print '  '.join([tag.ljust(taglen), str(count).rjust(countlen)])
+for tag, count in sorted_tag_counts:
+	print('  '.join([tag.ljust(taglen), str(count).rjust(countlen)]))
 
-print '  '.join(['='*taglen, '='*(countlen)])
+print('  '.join(['='*taglen, '='*(countlen)]))

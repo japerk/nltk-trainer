@@ -1,4 +1,3 @@
-import itertools
 import nltk.tag
 from nltk.chunk import ChunkParserI
 from nltk.chunk.util import conlltags2tree, tree2conlltags
@@ -47,7 +46,7 @@ def ieertree2conlltags(tree, tag=nltk.tag.pos_tag):
 			prev = ent
 	# get tags for each word, then construct 3-tuple for conll tags
 	words, tags = zip(*tag(words))
-	return itertools.izip(words, tags, iobs)
+	return zip(words, tags, iobs)
 
 #################
 ## tag chunker ##
@@ -69,8 +68,7 @@ class TagChunker(ChunkParserI):
 		(words, tags) = zip(*tagged_sent)
 		chunks = self.tagger.tag(tags)
 		# create conll str for tree parsing
-		wtc = itertools.izip(words, chunks)
-		return conlltags2tree([(w,t,c) for (w,(t,c)) in wtc])
+		return conlltags2tree([(w,t,c) for (w,(t,c)) in zip(words, chunks)])
 
 ########################
 ## classifier chunker ##

@@ -1,4 +1,5 @@
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier, megam
+from nltk_trainer import basestring
 from nltk_trainer.classification.multi import AvgProbClassifier
 
 classifier_choices = ['NaiveBayes', 'DecisionTree', 'Maxent'] + MaxentClassifier.ALGORITHMS
@@ -125,7 +126,7 @@ def make_sklearn_classifier(algo, args):
 		if val: kwargs[sklearn_keys.get(key, key)] = val
 	
 	if args.trace and kwargs:
-		print 'training %s with %s' % (algo, kwargs)
+		print('training %s with %s' % (algo, kwargs))
 	
 	if args.trace and name in verbose_classifiers:
 		kwargs['verbose'] = True
@@ -166,14 +167,14 @@ def make_classifier_builder(args):
 			
 			if tfidf and penalty:
 				if args.trace:
-					print 'using tfidf transformer with norm %s' % penalty
+					print('using tfidf transformer with norm %s' % penalty)
 				
 				pipe.insert(0, ('tfidf', TfidfTransformer(norm=penalty)))
 			
 			sparse = pipe[-1][1].__class__.__name__ not in dense_classifiers
 			
 			if not sparse and args.trace:
-				print 'using dense matrix'
+				print('using dense matrix')
 			
 			value_type = getattr(args, 'value_type', 'bool')
 			
@@ -185,7 +186,7 @@ def make_classifier_builder(args):
 				dtype = float
 			
 			if args.trace:
-				print 'using dtype %s' % dtype.__name__
+				print('using dtype %s' % dtype.__name__)
 			
 			classifier_train = scikitlearn.SklearnClassifier(Pipeline(pipe), dtype=dtype, sparse=sparse).train
 		else:
@@ -208,7 +209,7 @@ def make_classifier_builder(args):
 		
 		for algo, classifier_train, train_kwargs in classifier_train_args:
 			if args.trace:
-				print 'training %s classifier' % algo
+				print('training %s classifier' % algo)
 			
 			classifiers.append(classifier_train(train_feats, **train_kwargs))
 		

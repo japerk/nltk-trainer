@@ -1,6 +1,7 @@
 import collections, copy, itertools
 from nltk.classify import ClassifierI, MultiClassifierI
 from nltk.probability import FreqDist, DictionaryProbDist, MutableProbDist
+from nltk_trainer import iteritems
 
 class HierarchicalClassifier(ClassifierI):
 	def __init__(self, root, label_classifiers):
@@ -87,7 +88,7 @@ class MultiBinaryClassifier(MultiClassifierI):
 	def classify(self, feats):
 		lbls = set()
 		
-		for label, classifier in self._label_classifiers.iteritems():
+		for label, classifier in iteritems(self._label_classifiers):
 			if classifier.classify(feats) is True:
 				lbls.add(label)
 		
@@ -121,7 +122,7 @@ class MultiBinaryClassifier(MultiClassifierI):
 		
 		label_classifiers = {}
 		
-		for label, feats in label_feats.iteritems():
+		for label, feats in iteritems(label_feats):
 			label_classifiers[label] = trainf(feats, **train_kwargs)
 		
 		return cls(label_classifiers)

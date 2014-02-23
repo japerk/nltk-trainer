@@ -2,6 +2,7 @@ import nltk.tag
 from nltk.chunk import ChunkParserI
 from nltk.chunk.util import conlltags2tree, tree2conlltags
 from nltk.tag import UnigramTagger, BigramTagger, ClassifierBasedTagger
+from .transforms import node_label
 
 #####################
 ## tree conversion ##
@@ -23,17 +24,17 @@ def conll_tag_chunks(chunk_sents):
 	return [[(t, c) for (w, t, c) in sent] for sent in tagged_sents]
 
 def ieertree2conlltags(tree, tag=nltk.tag.pos_tag):
-	# tree.pos() flattens the tree and produces [(word, node)] where node is
-	# from the word's parent tree node. words in a chunk therefore get the
+	# tree.pos() flattens the tree and produces [(word, label)] where label is
+	# from the word's parent tree label. words in a chunk therefore get the
 	# chunk tag, while words outside a chunk get the same tag as the tree's
-	# top node
+	# top label
 	words, ents = zip(*tree.pos())
 	iobs = []
 	prev = None
 	# construct iob tags from entity names
 	for ent in ents:
-		# any entity that is the same as the tree's top node is outside a chunk
-		if ent == tree.node:
+		# any entity that is the same as the tree's top label is outside a chunk
+		if ent == node_label(tree):
 			iobs.append('O')
 			prev = None
 		# have a previous entity that is equal so this is inside the chunk

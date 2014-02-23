@@ -96,7 +96,7 @@ if isinstance(chunked_corpus, IEERCorpusReader):
 	
 	for doc in chunked_corpus.parsed_docs(**kwargs):
 		tagged = chunkers.ieertree2conlltags(doc.text)
-		chunk_trees.append(nltk.chunk.conlltags2tree(tagged))
+		chunk_trees.append(nltk.chunk.util.conlltags2tree(tagged))
 elif args.flatten_deep_tree and args.shallow_tree:
 	raise ValueError('only one of --flatten-deep-tree or --shallow-tree can be used')
 elif (args.flatten_deep_tree or args.shallow_tree) and not hasattr(chunked_corpus, 'parsed_sents'):

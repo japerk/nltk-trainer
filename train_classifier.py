@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import argparse, collections, itertools, math, operator, os.path, re, string, sys
+import argparse, collections, functools, itertools, math, operator, os.path, re, string, sys
 import nltk.data
 import nltk_trainer.classification.args
 from nltk.classify import DecisionTreeClassifier, MaxentClassifier, NaiveBayesClassifier
@@ -212,7 +212,7 @@ def norm_words(words):
 		words = list(words)
 	
 	if args.ngrams:
-		return reduce(operator.add, [words if n == 1 else ngrams(words, n) for n in args.ngrams])
+		return functools.reduce(operator.add, [words if n == 1 else list(ngrams(words, n)) for n in args.ngrams])
 	else:
 		return words
 

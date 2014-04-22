@@ -1,23 +1,22 @@
-import collections, random
+import collections, itertools, random
 from numpy import array
 from nltk.metrics import masi_distance, f_measure, precision, recall
-from nltk.probability import FreqDist, ConditionalFreqDist
 from nltk_trainer import iteritems
 
 def sum_category_word_scores(categorized_words, score_fn):
-	word_fd = FreqDist()
-	category_word_fd = ConditionalFreqDist()
+	word_fd = collections.Counter()
+	category_word_fd = collections.defaultdict(collections.Counter)
 	
 	for category, words in categorized_words:
 		for word in words:
-			word_fd.inc(word)
-			category_word_fd[category].inc(word)
+			word_fd[word] += 1
+			category_word_fd[category][word] += 1
 	
 	scores = collections.defaultdict(int)
-	n_xx = category_word_fd.N()
+	n_xx = sum(itertools.chain(*[fd.values() for fd in category_word_fd.values()]))
 	
-	for category in category_word_fd.conditions():
-		n_xi = category_word_fd[category].N()
+	for category in category_word_fd.keys():
+		n_xi = sum(category_word_fd[category].values())
 		
 		for word, n_ii in iteritems(category_word_fd[category]):
 			n_ix = word_fd[word]
@@ -72,7 +71,7 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, inform
 	# ordered by label
 	random.shuffle(instances)
 	l = len(instances)
-	step = l / folds
+	step = int(l / folds)
 	
 	if trace:
 		print('step %d over %d folds of %d instances' % (step, folds, l))
@@ -103,7 +102,7 @@ def cross_fold(instances, trainf, testf, folds=10, trace=1, metrics=True, inform
 		if metrics:
 			refsets, testsets = ref_test_sets(obj, test_instances)
 			
-			for key in set(refsets.keys() + testsets.keys()):
+			for key in set(refsets.keys()) | set(testsets.keys()):
 				ref = refsets[key]
 				test = testsets[key]
 				p = precision(ref, test) or 0

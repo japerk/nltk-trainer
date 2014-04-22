@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 import argparse, collections, itertools, operator, re, string, time
-import cPickle as pickle
 import nltk.data
 from nltk.classify.util import accuracy
 from nltk.corpus import stopwords
 from nltk.metrics import f_measure, precision, recall
 from nltk.util import ngrams
-from nltk_trainer import load_corpus_reader, simplify_wsj_tag
+from nltk_trainer import load_corpus_reader, pickle, simplify_wsj_tag
 from nltk_trainer.classification import corpus, scoring
 from nltk_trainer.classification.featx import bag_of_words
 

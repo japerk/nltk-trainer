@@ -45,11 +45,6 @@ using bag of words feature extraction
 training NaiveBayes classifier"
 }
 
-it_trains_movie_reviews_maxent() {
-	last_line=$(./train_classifier.py movie_reviews --classifier Maxent --no-pickle --no-eval --fraction 0.5 --instances paras 2>&1 | tail -n 1)
-	test "$last_line" "=" "training Maxent classifier"
-}
-
 it_shows_most_informative() {
 	first_lines=$(./train_classifier.py movie_reviews --show-most-informative 5 --no-pickle --no-eval --fraction 0.5 | head -n 7)
 	test "$first_lines" "=" "loading movie_reviews

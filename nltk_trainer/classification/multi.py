@@ -1,6 +1,6 @@
 import collections, copy, itertools
 from nltk.classify import ClassifierI, MultiClassifierI
-from nltk.probability import FreqDist, DictionaryProbDist, MutableProbDist
+from nltk.probability import DictionaryProbDist, MutableProbDist
 from nltk_trainer import iteritems
 
 class HierarchicalClassifier(ClassifierI):
@@ -48,12 +48,12 @@ class AvgProbClassifier(ClassifierI):
 	
 	def classify(self, feat):
 		'''Return the label with the most agreement among classifiers'''
-		label_freqs = FreqDist()
+		label_freqs = collections.Counter()
 		
 		for classifier in self._classifiers:
-			label_freqs.inc(classifier.classify(feat))
+			label_freqs[classifier.classify(feat)] += 1
 		
-		return label_freqs.max()
+		return label_freqs.most_common(1)[0][0]
 	
 	def prob_classify(self, feat):
 		'''Return ProbDistI of averaged label probabilities.'''

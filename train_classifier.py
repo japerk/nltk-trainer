@@ -419,7 +419,12 @@ if not args.no_pickle:
 	if args.filename:
 		fname = os.path.expanduser(args.filename)
 	else:
-		name = '%s_%s.pickle' % (args.corpus, '_'.join(args.classifier))
+		corpus_clean = args.corpus
+		if corpus_clean[-1] == '/':
+			corpus_clean = corpus_clean[:-1]
+		import re
+		re.sub('.*/','',corpus_clean)
+		name = '%s_%s.pickle' % (corpus_clean, '_'.join(args.classifier))
 		fname = os.path.join(os.path.expanduser('~/nltk_data/classifiers'), name)
 	
 	dump_object(classifier, fname, trace=args.trace)

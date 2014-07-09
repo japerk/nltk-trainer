@@ -423,7 +423,7 @@ if not args.no_pickle:
 		if corpus_clean[-1] == '/':
 			corpus_clean = corpus_clean[:-1]
 		import re
-		re.sub('.*/','',corpus_clean)
+		corpus_clean = re.sub('.*/','',corpus_clean)
 		name = '%s_%s.pickle' % (corpus_clean, '_'.join(args.classifier))
 		fname = os.path.join(os.path.expanduser('~/nltk_data/classifiers'), name)
 	

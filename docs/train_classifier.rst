@@ -1,3 +1,5 @@
+.. _train_classifier:
+
 Training Classifiers
 --------------------
 
@@ -58,6 +60,7 @@ For example, here's how to use the ``sklearn.LinearSVC`` classifier with the ``m
 For a complete list of usage options:
 	``python train_classifier.py --help``
 
+There are also many usage examples shown in Chapter 7 of `Python 3 Text Processing with NLTK 3 Cookbook <http://www.amazon.com/gp/product/1782167854/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=1782167854&linkCode=as2&tag=streamhacker-20&linkId=K2BYHHUBZ4GIEW4L>`_.
 
 Using a Trained Classifier
 --------------------------
@@ -85,3 +88,4 @@ If you used the ``--ngrams`` option with values greater than 1, you should inclu
 
 The list of words you use for creating the feature dictionary should be created by `tokenizing <http://text-processing.com/demo/tokenize/>`_ the appropriate text instances: sentences, paragraphs, or files depending on the ``--instances`` option.
 
+Most of the sentiment classifiers used by `text-processing.com <http://text-processing.com/demo/sentiment/>`_ were trained with ``train_classifier.py``.

@@ -1,3 +1,5 @@
+.. _train_tagger:
+
 Training Part of Speech Taggers
 -------------------------------
 
@@ -31,6 +33,7 @@ You can also restrict the files used with the ``--fileids`` option::
 For a complete list of usage options::
 	``python train_tagger.py --help``
 
+There are also many usage examples shown in Chapter 4 of `Python 3 Text Processing with NLTK 3 Cookbook <http://www.amazon.com/gp/product/1782167854/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=1782167854&linkCode=as2&tag=streamhacker-20&linkId=K2BYHHUBZ4GIEW4L>`_.
 
 Using a Trained Tagger
 ----------------------
@@ -49,3 +52,5 @@ Once you have a ``tagger`` object, you can use it to tag sentences (or lists of 
 	>>> tagger.tag(['some', 'words', 'in', 'a', 'sentence'])
 
 ``tagger.tag(words)`` will return a list of 2-tuples of the form ``[(word, tag)]``.
+
+All of the taggers demonstrated at `text-processing.com <http://text-processing.com/demo/tag/>`_ were trained with ``train_tagger.py``.

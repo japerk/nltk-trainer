@@ -15,4 +15,4 @@ If you want to use any of the corpora that come with NLTK, you should `install t
 Documentation
 -------------
 
-Documentation can be found at `nltk-trainer.readthedocs.org <http://nltk-trainer.readthedocs.org/en/latest/>`_ (you can also find these documents in the `docs directory <https://github.com/japerk/nltk-trainer/tree/master/docs>`_. Every script also provides a ``--help`` option that describes all available parameters.
+Documentation can be found at `nltk-trainer.readthedocs.org <http://nltk-trainer.readthedocs.org/en/latest/>`_ (you can also find these documents in the `docs directory <https://github.com/japerk/nltk-trainer/tree/master/docs>`_. Many of the scripts are covered in `Python 3 Text Processing with NLTK 3 Cookbook <http://www.amazon.com/gp/product/1782167854/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=1782167854&linkCode=as2&tag=streamhacker-20&linkId=K2BYHHUBZ4GIEW4L>`_, and every script provides a ``--help`` option that describes all available parameters.

@@ -1,3 +1,5 @@
+.. _train_chunker:
+
 Training IOB Chunkers
 ---------------------
 
@@ -23,6 +25,7 @@ You can also restrict the files used with the ``--fileids`` option::
 For a complete list of usage options::
 	``python train_chunker.py --help``
 
+There are also many usage examples shown in Chapter 5 of `Python 3 Text Processing with NLTK 3 Cookbook <http://www.amazon.com/gp/product/1782167854/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=1782167854&linkCode=as2&tag=streamhacker-20&linkId=K2BYHHUBZ4GIEW4L>`_.
 
 Using a Trained Chunker
 -----------------------
@@ -39,3 +42,5 @@ Either method will return an object that supports the `ChunkerParserI interface 
 	>>> chunker.parse(tagged_words)
 
 ``chunker.parse(tagged_words)`` will return a `Tree <http://nltk.org/api/nltk.html#nltk.tree.Tree>`_ whose `subtrees <http://nltk.org/api/nltk.html#nltk.tree.Tree.subtrees>`_ will be chunks, and whose `leaves <http://nltk.org/api/nltk.html#nltk.tree.Tree.leaves>`_ are the original tagged words.
+
+All of the chunkers demonstrated at `text-processing.com <http://text-processing.com/demo/tag/>`_ were trained with ``train_chunker.py``.

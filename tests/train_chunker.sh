@@ -53,3 +53,10 @@ it_trains_conll2000() {
 10948 chunks, training on 5474
 training ub TagChunker"
 }
+
+it_trains_conll2000_universal() {
+	test "$(./train_chunker.py conll2000 --no-pickle --no-eval --fraction 0.5 --tagset universal)" "=" "loading conll2000
+using universal tagset
+10948 chunks, training on 5474
+training ub TagChunker"
+}

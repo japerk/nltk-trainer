@@ -43,6 +43,9 @@ Cannot be combined with --flatten-deep-tree.''')
 if simplify_wsj_tag:
 	corpus_group.add_argument('--simplify_tags', action='store_true', default=False,
 		help='Use simplified tags')
+else:
+	corpus_group.add_argument('--tagset', default=None,
+		help='Map tags to a given tagset, such as "universal"')
 
 chunker_group = parser.add_argument_group('Chunker Options')
 chunker_group.add_argument('--sequential', default='ub',
@@ -87,6 +90,11 @@ if fileids and fileids in chunked_corpus.fileids():
 
 if simplify_wsj_tag and args.simplify_tags:
 	kwargs['simplify_tags'] = True
+elif not simplify_wsj_tag and args.tagset:
+	kwargs['tagset'] = args.tagset
+	
+	if args.trace:
+		print('using %s tagset' % args.tagset)
 
 if isinstance(chunked_corpus, IEERCorpusReader):
 	chunk_trees = []

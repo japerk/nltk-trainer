@@ -5,7 +5,7 @@ from nltk.corpus import stopwords
 from nltk.misc import babelfish
 from nltk.tokenize import wordpunct_tokenize
 from nltk.util import ngrams
-from nltk_trainer import load_corpus_reader, join_words, translate
+from nltk_trainer import load_corpus_reader, join_words
 from nltk_trainer.classification.featx import bag_of_words
 
 langs = [l.lower() for l in babelfish.available_languages]
@@ -52,14 +52,6 @@ feat_group.add_argument('--filter-stopwords', default='no',
 	help='language stopwords to filter, defaults to "no" to keep stopwords')
 feat_group.add_argument('--punctuation', action='store_true', default=False,
 	help="don't strip punctuation")
-
-trans_group = parser.add_argument_group('Language Translation')
-trans_group.add_argument('--source', default='english', choices=langs, help='source language')
-trans_group.add_argument('--target', default=None, choices=langs, help='target language')
-trans_group.add_argument('--retries', default=3, type=int,
-	help='Number of babelfish retries before quiting')
-trans_group.add_argument('--sleep', default=3, type=int,
-	help='Sleep time between retries')
 
 args = parser.parse_args()
 
@@ -136,14 +128,7 @@ label_files = dict([(l, open(label_filename(l), 'a')) for l in labels])
 
 # TODO: create a nltk.corpus.writer framework with some initial CorpusWriter classes
 
-if args.target:
-	if args.trace:
-		print 'translating all text from %s to %s' % (args.source, args.target)
-	
-	featx = lambda words: bag_of_words(norm_words(wordpunct_tokenize(translate(join_words(words),
-		args.source, args.target, trace=args.trace, sleep=args.sleep, retries=args.retries))))
-else:
-	featx = lambda words: bag_of_words(norm_words(words))
+featx = lambda words: bag_of_words(norm_words(words))
 
 def classify_write(words):
 	feats = featx(words)

@@ -15,6 +15,7 @@ from nltk_trainer.classification import corpus, scoring
 from nltk_trainer.classification.featx import (bag_of_words, bag_of_words_in_set,
 	word_counts, train_test_feats, word_counts_in_set)
 from nltk_trainer.classification.multi import MultiBinaryClassifier
+from nltk.stem import PorterStemmer
 
 ########################################
 ## command options & argument parsing ##
@@ -93,6 +94,8 @@ feat_group.add_argument('--punctuation', action='store_true', default=False,
 feat_group.add_argument('--value-type', default='bool', choices=('bool', 'int', 'float'),
 	help='''Data type of values in featuresets. The default is bool, which ignores word counts.
 	Use int to get word and/or ngram counts.''')
+feat_group.add_argument('--stem-words', action='store_true', default=False,
+	help='''Performs word stemming on all of the words.''')
 
 score_group = parser.add_argument_group('Feature Scoring',
 	'The default is no scoring, all words are included as features')
@@ -207,6 +210,10 @@ def norm_words(words):
 	if stopset:
 		words = (w for w in words if w.lower() not in stopset)
 	
+	if args.stem_words:
+		stemmer = PorterStemmer()
+		words = (stemmer.stem(w) for w in words)
+
 	# in case we modified words in a generator, ensure it's a list so we can add together
 	if not isinstance(words, list):
 		words = list(words)

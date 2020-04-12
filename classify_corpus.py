@@ -2,13 +2,10 @@
 import argparse, itertools, operator, os, os.path, string
 import nltk.data
 from nltk.corpus import stopwords
-from nltk.misc import babelfish
 from nltk.tokenize import wordpunct_tokenize
 from nltk.util import ngrams
 from nltk_trainer import load_corpus_reader, join_words
 from nltk_trainer.classification.featx import bag_of_words
-
-langs = [l.lower() for l in babelfish.available_languages]
 
 ########################################
 ## command options & argument parsing ##
@@ -65,7 +62,7 @@ if not source_corpus:
 	raise ValueError('%s is an unknown corpus')
 
 if args.trace:
-	print 'loaded %s' % args.source_corpus
+	print('loaded %s' % args.source_corpus)
 
 ########################
 ## text normalization ##
@@ -105,7 +102,7 @@ if args.wordlist:
 	classifier = WordListClassifier(load_corpus_reader(args.wordlist))
 elif args.classifier:
 	if args.trace:
-		print 'loading %s' % args.classifier
+		print('loading %s' % args.classifier)
 	
 	classifier = nltk.data.load(args.classifier)
 else:
@@ -119,7 +116,7 @@ def label_filename(label):
 		os.makedirs(args.target_corpus)
 	
 	if args.trace:
-		print 'filename for category %s: %s' % (label, path)
+		print('filename for category %s: %s' % (label, path))
 	
 	return path
 
@@ -139,7 +136,7 @@ def classify_write(words):
 		label_files[label].write(join_words(words) + u'\n\n')
 
 if args.trace:
-	print 'classifying %s' % args.instances
+	print('classifying %s' % args.instances)
 
 if args.instances == 'paras':
 	for para in source_corpus.paras():

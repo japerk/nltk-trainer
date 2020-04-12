@@ -47,7 +47,7 @@ if not source_corpus:
 	raise ValueError('%s is an unknown corpus')
 
 if args.trace:
-	print 'loaded %s' % args.source_corpus
+	print('loaded %s' % args.source_corpus)
 
 ############
 ## tagger ##
@@ -55,7 +55,7 @@ if args.trace:
 
 # TODO: from analyze_tagger_coverage.py
 if args.trace:
-	print 'loading tagger %s' % args.tagger
+	print('loading tagger %s' % args.tagger)
 
 try:
 	tagger = nltk.data.load(args.tagger)

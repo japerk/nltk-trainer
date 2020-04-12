@@ -36,7 +36,7 @@ args = parser.parse_args()
 ###################
 
 if args.trace:
-	print 'loading corpus %s' % args.corpus
+	print('loading corpus %s' % args.corpus)
 
 corpus = load_corpus_reader(args.corpus)
 
@@ -58,7 +58,7 @@ if not filename:
 	filename = '%s_%s.csv' % (os.path.basename(args.corpus), args.instances)
 
 if args.trace:
-	print 'writing to %s' % filename
+	print('writing to %s' % filename)
 
 with open(filename, 'w') as f:
 	w = csv.writer(f, quoting=csv.QUOTE_ALL)

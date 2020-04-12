@@ -12,7 +12,7 @@ try:
 	from nltk.compat import iteritems
 except ImportError:
 	def iteritems(d):
-		return d.iteritems()
+		return d.items()
 
 try:
 	basestring = basestring

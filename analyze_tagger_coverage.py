@@ -16,7 +16,7 @@ parser.add_argument('corpus',
 	help='''The name of a tagged corpus included with NLTK, such as treebank,
 brown, cess_esp, floresta, or the root path to a corpus directory,
 which can be either an absolute path or relative to a nltk_data directory.''')
-parser.add_argument('--tagger', default=nltk.tag._POS_TAGGER,
+parser.add_argument('--tagger', default=None,
 	help='''pickled tagger filename/path relative to an nltk_data directory
 default is NLTK's default tagger''')
 parser.add_argument('--trace', default=1, type=int,
@@ -70,7 +70,9 @@ if args.metrics and not hasattr(corpus, 'tagged_sents'):
 if args.trace:
 	print('loading tagger %s' % args.tagger)
 
-if args.tagger == 'pattern':
+if not args.tagger:
+	tagger = nltk.tag._get_tagger()
+elif args.tagger == 'pattern':
 	tagger = taggers.PatternTagger()
 else:
 	tagger = load_model(args.tagger)

@@ -32,7 +32,7 @@ classifiers = []
 
 for name in args.classifiers:
 	if args.trace:
-		print 'loading %s' % name
+		print('loading %s' % name)
 	
 	classifiers.append(nltk.data.load(name))
 
@@ -54,11 +54,11 @@ for h in args.hierarchy:
 	label_classifiers[label] = nltk.data.load(path)
 	
 	if args.trace:
-		print 'mapping %s to %s from %s' % (label, label_classifiers[label], path)
+		print('mapping %s to %s from %s' % (label, label_classifiers[label], path))
 
 if label_classifiers:
 	if args.trace:
-		'combining %d label classifiers for root %s' % (len(label_classifiers), combined)
+		print('combining %d label classifiers for root %s' % (len(label_classifiers), combined))
 	
 	combined = multi.HierarchicalClassifier(combined, label_classifiers)
 

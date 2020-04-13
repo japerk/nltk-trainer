@@ -39,7 +39,7 @@ The following classifiers are available:
 	* ``Maxent`` with various algorithms (many of these require `numpy and scipy <http://numpy.scipy.org/>`_, and ``MEGAM`` requires `megam <http://www.cs.utah.edu/~hal/megam/>`_)
 	* ``Svm`` (requires `svmlight <http://svmlight.joachims.org/>`_ and `pysvmlight <https://bitbucket.org/wcauchois/pysvmlight>`_)
 
-If you also have `scikit-learn <http://scikit-learn.org/>`_ then the following classifiers will also be available, with ``sklearn`` specific training options. If there is a sklearn classifier or training option you want that is not present, please `submit an issue <https://github.com/japerk/nltk-trainer/issues>`_.
+If you also have `scikit-learn <http://scikit-learn.org/>`_ then the following classifiers will also be available, with ``sklearn`` specific training options. Use ``--help`` to see all the available arguments. If there is a sklearn classifier or training option you want that is not present, please `submit an issue <https://github.com/japerk/nltk-trainer/issues>`_.
 
 	* `sklearn.ExtraTreesClassifier <http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html#sklearn.ensemble.ExtraTreesClassifier>`_
 	* `sklearn.GradientBoostingClassifier <http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn.ensemble.GradientBoostingClassifier>`_

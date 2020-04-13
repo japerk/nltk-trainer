@@ -7,7 +7,7 @@ Welcome to NLTK-Trainer's documentation!
 2. evaluate pickled models against a corpus
 3. analyze a corpus
 
-These scripts are Python 2 & 3 compatible and work with NLTK 2.0.4 and higher.
+These scripts are Python 3.7 compatible and work with NLTK 3.4.5 and higher.
 
 Download
 ========
